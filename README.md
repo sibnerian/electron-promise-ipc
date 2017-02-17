@@ -53,7 +53,7 @@ Note that because this is IPC, only JSON-serializable values can be passed as ar
 
 ## Advanced usage
 
-By default, the promise will wait forever for the other process to return it some data. If you want to set a timeout (after which the promise will be rejected automatically), you can create another instance of PromiseIpc:
+By default, the promise will wait forever for the other process to return it some data. If you want to set a timeout (after which the promise will be rejected automatically), you can create another instance of `PromiseIpc` like so:
 
 ```js
 // main process code remains the same
