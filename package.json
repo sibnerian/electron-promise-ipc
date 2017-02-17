@@ -1,0 +1,47 @@
+{
+  "name": "electron-promise-ipc",
+  "version": "0.0.1",
+  "description": "Run IPC calls with a promise API.",
+  "scripts": {
+    "pretest": "npm run --silent lint && npm run build",
+    "test": "npm run tests-only",
+    "tests-only": "mocha",
+    "lint": "eslint .",
+    "build": "mkdirp build && babel index.js --out-file build/index.js --source-maps",
+    "prepublish": "npm run build",
+    "clean": "rimraf build"
+  },
+  "main": "build/index.js",
+  "repository": {},
+  "author": "Ian Sibner <sibnerian@gmail.com>",
+  "license": "MIT",
+  "peerDependencies": {
+    "electron": "^1.4.15"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.7",
+    "is-electron-renderer": "^2.0.1",
+    "sinon": "^1.17.7",
+    "uuid": "^3.0.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.23.0",
+    "babel-core": "^6.23.1",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-airbnb": "^2.2.3",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
+    "electron": "^1.4.15",
+    "electron-ipc-mock": "^0.0.2",
+    "eslint": "^3.15.0",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-plugin-react": "^6.10.0",
+    "lolex": "^1.5.2",
+    "mkdirp": "^0.5.1",
+    "mocha": "^3.2.0",
+    "proxyquire": "^1.7.11",
+    "rimraf": "^2.5.4"
+  }
+}
