@@ -8,14 +8,14 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
-const { default: renderer, PromiseIpcRenderer } = proxyquire('../renderer', {
+const { default: renderer, PromiseIpc } = proxyquire('../renderer', {
   electron: { ipcRenderer },
   'uuid/v4': () => uuid,
 });
 
 describe('renderer', () => {
-  it('exports a default that’s an instance of PromiseIpcRenderer', () => {
-    expect(renderer).to.be.an.instanceOf(PromiseIpcRenderer);
+  it('exports a default that’s an instance of PromiseIpc', () => {
+    expect(renderer).to.be.an.instanceOf(PromiseIpc);
   });
 
   describe('send', () => {

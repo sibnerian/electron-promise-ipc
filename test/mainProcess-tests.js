@@ -9,7 +9,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
-const { default: mainProcessDefault, PromiseIpcMain } = proxyquire('../mainProcess', {
+const { default: mainProcessDefault, PromiseIpc } = proxyquire('../mainProcess', {
   electron: { ipcMain },
   'uuid/v4': () => uuid,
 });
@@ -20,8 +20,8 @@ const generateRoute = (function generateRoute() {
 }());
 
 describe('mainProcess', () => {
-  it('exports a default that’s an instance of PromiseIpcMain', () => {
-    expect(mainProcessDefault).to.be.an.instanceOf(PromiseIpcMain);
+  it('exports a default that’s an instance of PromiseIpc', () => {
+    expect(mainProcessDefault).to.be.an.instanceOf(PromiseIpc);
   });
 
   describe('on', () => {
@@ -29,7 +29,7 @@ describe('mainProcess', () => {
     let route = generateRoute();
 
     beforeEach(() => {
-      mainProcess = new PromiseIpcMain();
+      mainProcess = new PromiseIpc();
     });
 
     afterEach(() => {

@@ -58,4 +58,6 @@ export class PromiseIpcRenderer {
   }
 }
 
+export const PromiseIpc = PromiseIpcRenderer;
+
 export default new PromiseIpcRenderer();

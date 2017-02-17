@@ -60,4 +60,7 @@ export class PromiseIpcMain {
   }
 }
 
+export const PromiseIpc = PromiseIpcMain;
+
+
 export default new PromiseIpcMain();
