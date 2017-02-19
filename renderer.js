@@ -27,7 +27,7 @@ export class PromiseIpcRenderer {
           case 'failure':
             return reject(new Error(returnData));
           default:
-            return reject(new Error(`Unexpected IPC call status ${status} in ${route}`));
+            return reject(new Error(`Unexpected IPC call status "${status}" in ${route}`));
         }
       });
       ipcRenderer.send(route, replyChannel, ...dataArgs);

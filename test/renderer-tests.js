@@ -49,5 +49,14 @@ describe('renderer', () => {
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
       return expect(promise).to.be.rejectedWith(Error, 'an error message');
     });
+
+    it('rejects if the IPC passes an unrecognized lifecycle event', () => {
+      const replyChannel = `route#${uuid}`;
+      ipcMain.once('route', (event) => {
+        event.sender.send(replyChannel, 'unrecognized', 'an error message');
+      });
+      const promise = renderer.send('route', 'dataArg1', 'dataArg2');
+      return expect(promise).to.be.rejectedWith(Error, 'Unexpected IPC call status "unrecognized" in route');
+    });
   });
 });
