@@ -14,7 +14,7 @@ const generateRoute = (function generateRoute() {
   return () => i++; // eslint-disable-line no-plusplus
 }());
 
-const { default: renderer, PromiseIpc } = proxyquire('../renderer', {
+const { default: renderer, PromiseIpc } = proxyquire('../src/renderer', {
   electron: { ipcRenderer },
   'uuid/v4': () => uuid,
 });

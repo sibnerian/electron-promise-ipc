@@ -1,6 +1,6 @@
 {
   "name": "electron-promise-ipc",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
@@ -8,7 +8,7 @@
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "test": "npm run coverage",
     "lint": "eslint .",
-    "build": "mkdirp build && babel index.js --out-file build/index.js --source-maps",
+    "build": "mkdirp build && babel src --out-dir build --source-maps",
     "prepublish": "npm run build",
     "clean": "rimraf build"
   },

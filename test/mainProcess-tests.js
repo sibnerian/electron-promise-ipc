@@ -10,7 +10,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
-const { default: mainProcessDefault, PromiseIpc } = proxyquire('../mainProcess', {
+const { default: mainProcessDefault, PromiseIpc } = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   'uuid/v4': () => uuid,
 });
