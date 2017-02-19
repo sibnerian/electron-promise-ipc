@@ -1,6 +1,7 @@
 import proxyquire from 'proxyquire';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
+import lolex from 'lolex';
 
 const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 
@@ -57,6 +58,37 @@ describe('renderer', () => {
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
       return expect(promise).to.be.rejectedWith(Error, 'Unexpected IPC call status "unrecognized" in route');
+    });
+    describe('timeouts', () => {
+      let clock;
+
+      beforeEach(() => {
+        clock = lolex.install();
+      });
+
+      afterEach(() => {
+        clock.uninstall();
+      });
+
+      it('fails if it times out', () => {
+        const timeoutRenderer = new PromiseIpc({ maxTimeoutMs: 5000 });
+        const promise = timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        clock.tick(5001);
+        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+      });
+      it('swallows a subsequent resolve if it timed out', () => {
+        const replyChannel = `route#${uuid}`;
+        ipcMain.once('route', (event) => {
+          setTimeout(() => {
+            event.sender.send(replyChannel, 'unrecognized', 'an error message');
+          }, 6000);
+        });
+        const timeoutRenderer = new PromiseIpc({ maxTimeoutMs: 5000 });
+        const promise = timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        clock.tick(5001);
+        clock.tick(1000);
+        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+      });
     });
   });
 });
