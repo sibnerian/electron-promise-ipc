@@ -81,11 +81,12 @@ describe('renderer', () => {
         clock.tick(5001);
         return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
       });
+
       it('swallows a subsequent resolve if it timed out', () => {
         const replyChannel = `route#${uuid}`;
         ipcMain.once('route', (event) => {
           setTimeout(() => {
-            event.sender.send(replyChannel, 'unrecognized', 'an error message');
+            event.sender.send(replyChannel, 'success', 'a message');
           }, 6000);
         });
         const timeoutRenderer = new PromiseIpc({ maxTimeoutMs: 5000 });
