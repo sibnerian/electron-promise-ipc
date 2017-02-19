@@ -52,7 +52,8 @@ export class PromiseIpcRenderer {
           ipcRenderer.send(replyChannel, 'success', results);
         })
         .catch((e) => {
-          ipcRenderer.send(replyChannel, 'failure', `${e}`);
+          const message = e && e.message ? e.message : e;
+          ipcRenderer.send(replyChannel, 'failure', message);
         });
     });
   }

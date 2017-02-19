@@ -9,6 +9,11 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
+const generateRoute = (function generateRoute() {
+  let i = 1;
+  return () => i++; // eslint-disable-line no-plusplus
+}());
+
 const { default: renderer, PromiseIpc } = proxyquire('../renderer', {
   electron: { ipcRenderer },
   'uuid/v4': () => uuid,
@@ -89,6 +94,73 @@ describe('renderer', () => {
         clock.tick(1000);
         return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
       });
+    });
+  });
+
+  describe('on', () => {
+    let mockWebContents;
+    before((done) => {
+      ipcMain.once('saveMockWebContentsSend', (event) => {
+        mockWebContents = event.sender;
+        done();
+      });
+      ipcRenderer.send('saveMockWebContentsSend');
+    });
+    let route = generateRoute();
+
+    afterEach(() => {
+      // why not remove all listeners? a bug in the library of course...
+      // https://github.com/jsantell/electron-ipc-mock/pull/4
+      // ipcMain.removeAllListeners();
+      // instead we'll generate new routes for now, until the PR goes through.
+      route = generateRoute();
+    });
+
+    it('when listener returns resolved promise, sends success + value to the main process', (done) => {
+      renderer.on(route, () => Promise.resolve('foober'));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'foober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('when listener synchronously returns, sends success + value to the main process', (done) => {
+      renderer.on(route, () => Promise.resolve('foober'));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'foober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('when listener returns rejected promise, sends failure + error to the main process', (done) => {
+      renderer.on(route, () => Promise.reject(new Error('foober')));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', 'foober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('when listener throws, sends failure + error to the main process', (done) => {
+      renderer.on(route, () => {
+        throw new Error('oh no');
+      });
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', 'oh no']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('passes the received data args to the listener', (done) => {
+      renderer.on(route, (...args) => args.join(','));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'foo,bar,baz']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'foo', 'bar', 'baz');
     });
   });
 });
