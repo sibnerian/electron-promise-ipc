@@ -1,5 +1,7 @@
 # electron-promise-ipc
-[![Build Status](https://travis-ci.org/sibnerian/electron-promise-ipc.svg?branch=master)](https://travis-ci.org/sibnerian/electron-promise-ipc)
+
+[![Build Status](https://travis-ci.org/sibnerian/electron-promise-ipc.svg?branch=master)](https://travis-ci.org/sibnerian/electron-promise-ipc)[![Coverage Status](https://coveralls.io/repos/github/sibnerian/electron-promise-ipc/badge.svg?branch=master)](https://coveralls.io/github/sibnerian/electron-promise-ipc?branch=master)
+
 #### Promise-y IPC calls in Electron.
 
 ## Installation

@@ -7,3 +7,5 @@ node_js:
 os:
   - linux
   - osx
+script: npm run coverage
+after_success: 'npm run coveralls'

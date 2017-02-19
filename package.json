@@ -4,6 +4,8 @@
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
+    "coverage": "istanbul cover _mocha",
+    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "test": "npm run tests-only",
     "tests-only": "mocha",
     "lint": "eslint .",
@@ -21,7 +23,6 @@
   "dependencies": {
     "bluebird": "^3.4.7",
     "is-electron-renderer": "^2.0.1",
-    "sinon": "^1.17.7",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
@@ -31,6 +32,7 @@
     "babel-preset-airbnb": "^2.2.3",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "coveralls": "^2.11.16",
     "electron": "^1.4.15",
     "electron-ipc-mock": "^0.0.2",
     "eslint": "^3.15.0",
@@ -38,10 +40,12 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.0",
+    "istanbul": "1.1.0-alpha.2",
     "lolex": "^1.5.2",
     "mkdirp": "^0.5.1",
     "mocha": "^3.2.0",
     "proxyquire": "^1.7.11",
-    "rimraf": "^2.5.4"
+    "rimraf": "^2.5.4",
+    "sinon": "^1.17.7"
   }
 }
