@@ -144,6 +144,15 @@ describe('renderer', () => {
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
     });
 
+    it('lets a listener reject with a simple string', (done) => {
+      renderer.on(route, () => Promise.reject('goober'));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', 'goober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
     it('when listener throws, sends failure + error to the main process', (done) => {
       renderer.on(route, () => {
         throw new Error('oh no');

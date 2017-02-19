@@ -68,6 +68,15 @@ describe('mainProcess', () => {
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
     });
 
+    it('lets listener reject with a simple string', (done) => {
+      mainProcess.on(route, () => Promise.reject('goober'));
+      ipcRenderer.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', 'goober']);
+        done();
+      });
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
+
     it('when listener throws, sends failure + error to the renderer', (done) => {
       mainProcess.on(route, () => {
         throw new Error('oh no');
