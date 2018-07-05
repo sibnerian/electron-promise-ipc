@@ -5,7 +5,7 @@
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
     "coverage": "nyc mocha",
-    "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run coverage",
     "lint": "eslint .",
     "build": "mkdirp build && babel src --out-dir build --source-maps",
