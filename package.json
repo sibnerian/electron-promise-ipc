@@ -1,6 +1,6 @@
 {
   "name": "electron-promise-ipc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
@@ -13,7 +13,10 @@
     "clean": "rimraf build"
   },
   "main": "build/index.js",
-  "repository": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sibnerian/electron-promise-ipc.git"
+  },
   "author": "Ian Sibner <sibnerian@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
@@ -53,5 +56,13 @@
       "test",
       "build"
     ]
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "electron",
+    "promise",
+    "ipc"
+  ]
 }
