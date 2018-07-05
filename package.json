@@ -4,7 +4,7 @@
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
-    "coverage": "istanbul cover _mocha",
+    "coverage": "nyc mocha",
     "coveralls": "cat ./coverage/lcov.info | node node_modules/.bin/coveralls",
     "test": "npm run coverage",
     "lint": "eslint .",
@@ -22,6 +22,7 @@
   "dependencies": {
     "bluebird": "^3.4.7",
     "is-electron-renderer": "^2.0.1",
+    "nyc": "^12.0.2",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
@@ -39,7 +40,6 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.0",
-    "istanbul": "1.1.0-alpha.2",
     "lolex": "^1.5.2",
     "mkdirp": "^0.5.1",
     "mocha": "^3.2.0",

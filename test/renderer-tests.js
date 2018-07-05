@@ -77,9 +77,10 @@ describe('renderer', () => {
 
       it('fails if it times out', () => {
         const timeoutRenderer = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const promise = timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
-        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+        return p;
       });
 
       it('swallows a subsequent resolve if it timed out', () => {
@@ -90,10 +91,11 @@ describe('renderer', () => {
           }, 6000);
         });
         const timeoutRenderer = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const promise = timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutRenderer.send('route', 'dataArg1', 'dataArg2');
+        const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
-        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+        return p;
       });
     });
   });

@@ -162,9 +162,10 @@ describe('mainProcess', () => {
 
       it('fails if it times out', () => {
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const promise = timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
-        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+        return p;
       });
 
       it('swallows a subsequent resolve if it timed out', () => {
@@ -175,10 +176,11 @@ describe('mainProcess', () => {
           }, 6000);
         });
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const promise = timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
-        return expect(promise).to.be.rejectedWith(Error, 'route timed out.');
+        return p;
       });
     });
   });
