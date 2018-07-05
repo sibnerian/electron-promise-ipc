@@ -62,5 +62,9 @@ export class PromiseIpcMain {
 
 export const PromiseIpc = PromiseIpcMain;
 
+const mainExport = new PromiseIpcMain();
+mainExport.PromiseIpc = PromiseIpcMain;
+mainExport.PromiseIpcMain = PromiseIpcMain;
 
-export default new PromiseIpcMain();
+export default mainExport;
+module.exports = mainExport;

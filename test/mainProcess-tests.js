@@ -10,10 +10,11 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
-const { default: mainProcessDefault, PromiseIpc } = proxyquire('../src/mainProcess', {
+const mainProcessDefault = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   'uuid/v4': () => uuid,
 });
+const PromiseIpc = mainProcessDefault.PromiseIpc;
 
 const generateRoute = (function generateRoute() {
   let i = 1;

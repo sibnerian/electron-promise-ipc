@@ -61,4 +61,9 @@ export class PromiseIpcRenderer {
 
 export const PromiseIpc = PromiseIpcRenderer;
 
-export default new PromiseIpcRenderer();
+const mainExport = new PromiseIpcRenderer();
+mainExport.PromiseIpc = PromiseIpcRenderer;
+mainExport.PromiseIpcRenderer = PromiseIpcRenderer;
+
+export default mainExport;
+module.exports = mainExport;

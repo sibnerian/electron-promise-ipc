@@ -14,10 +14,11 @@ const generateRoute = (function generateRoute() {
   return () => i++; // eslint-disable-line no-plusplus
 }());
 
-const { default: renderer, PromiseIpc } = proxyquire('../src/renderer', {
+const renderer = proxyquire('../src/renderer', {
   electron: { ipcRenderer },
   'uuid/v4': () => uuid,
 });
+const { PromiseIpc } = renderer;
 
 describe('renderer', () => {
   it('exports a default that’s an instance of PromiseIpc', () => {
