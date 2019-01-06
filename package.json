@@ -37,7 +37,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "coveralls": "^3.0.2",
-    "electron": "^1.4.15",
+    "electron": "^4.0.1",
     "electron-ipc-mock": "^0.0.2",
     "eslint": "^3.15.0",
     "eslint-config-airbnb": "^14.1.0",
