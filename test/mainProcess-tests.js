@@ -63,7 +63,7 @@ describe('mainProcess', () => {
     it('when listener returns rejected promise, sends failure + error to the renderer', (done) => {
       mainProcess.on(route, () => Promise.reject(new Error('foober')));
       ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'foober']);
+        expect([status, result]).to.eql(['failure', new Error('foober')]);
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -72,7 +72,7 @@ describe('mainProcess', () => {
     it('lets listener reject with a simple string', (done) => {
       mainProcess.on(route, () => Promise.reject('goober'));
       ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'goober']);
+        expect([status, result]).to.eql(['failure', new Error('goober')]);
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -83,7 +83,7 @@ describe('mainProcess', () => {
         throw new Error('oh no');
       });
       ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'oh no']);
+        expect([status, result]).to.eql(['failure', new Error('oh no')]);
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -135,7 +135,7 @@ describe('mainProcess', () => {
     it('rejects with the IPC-passed message on failure', () => {
       const replyChannel = `route#${uuid}`;
       ipcRenderer.once('route', (event) => {
-        event.sender.send(replyChannel, 'failure', 'an error message');
+        event.sender.send(replyChannel, 'failure', new Error('an error message'));
       });
       const promise = mainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
       return expect(promise).to.be.rejectedWith(Error, 'an error message');

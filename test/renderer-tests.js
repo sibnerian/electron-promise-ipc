@@ -51,7 +51,7 @@ describe('renderer', () => {
     it('rejects with the IPC-passed message on failure', () => {
       const replyChannel = `route#${uuid}`;
       ipcMain.once('route', (event) => {
-        event.sender.send(replyChannel, 'failure', 'an error message');
+        event.sender.send(replyChannel, 'failure', new Error('an error message'));
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
       return expect(promise).to.be.rejectedWith(Error, 'an error message');
@@ -141,7 +141,7 @@ describe('renderer', () => {
     it('when listener returns rejected promise, sends failure + error to the main process', (done) => {
       renderer.on(route, () => Promise.reject(new Error('foober')));
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'foober']);
+        expect([status, result]).to.eql(['failure', new Error('foober')]);
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
@@ -150,7 +150,7 @@ describe('renderer', () => {
     it('lets a listener reject with a simple string', (done) => {
       renderer.on(route, () => Promise.reject('goober'));
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'goober']);
+        expect([status, result]).to.eql(['failure', new Error('goober')]);
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
@@ -161,7 +161,7 @@ describe('renderer', () => {
         throw new Error('oh no');
       });
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'oh no']);
+        expect([status, result]).to.eql(['failure', new Error('oh no')]);
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
