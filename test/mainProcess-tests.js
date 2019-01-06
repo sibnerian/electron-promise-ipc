@@ -63,7 +63,9 @@ describe('mainProcess', () => {
     it('when listener returns rejected promise, sends failure + error to the renderer', (done) => {
       mainProcess.on(route, () => Promise.reject(new Error('foober')));
       ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'foober']);
+        expect(status).to.eql('failure');
+        expect(result.name).to.eql('Error');
+        expect(result.message).to.eql('foober');
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -78,12 +80,44 @@ describe('mainProcess', () => {
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
     });
 
+    it('lets a listener reject with a function', (done) => {
+      mainProcess.on(route, () => Promise.reject(() => 'yay!'));
+      ipcRenderer.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', '[Function: anonymous]']);
+        done();
+      });
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('lets a listener reject with a custom error', (done) => {
+      mainProcess.on(route, () => {
+        const custom = new Error('message');
+        custom.obj = { foo: 'bar' };
+        custom.array = ['one', 'two'];
+        custom.func = () => 'yay!';
+        custom.self = custom;
+        return Promise.reject(custom);
+      });
+      ipcRenderer.once('replyChannel', (event, status, result) => {
+        expect(status).to.eql('failure');
+        expect(result.message).to.eql('message');
+        expect(result.obj).to.eql({ foo: 'bar' });
+        expect(result.array).to.eql(['one', 'two']);
+        expect(result.func).to.eql(undefined);
+        expect(result.self).to.eql('[Circular]');
+        done();
+      });
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
+
     it('when listener throws, sends failure + error to the renderer', (done) => {
       mainProcess.on(route, () => {
         throw new Error('oh no');
       });
       ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', 'oh no']);
+        expect(status).to.eql('failure');
+        expect(result.name).to.eql('Error');
+        expect(result.message).to.eql('oh no');
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -135,7 +169,7 @@ describe('mainProcess', () => {
     it('rejects with the IPC-passed message on failure', () => {
       const replyChannel = `route#${uuid}`;
       ipcRenderer.once('route', (event) => {
-        event.sender.send(replyChannel, 'failure', 'an error message');
+        event.sender.send(replyChannel, 'failure', new Error('an error message'));
       });
       const promise = mainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
       return expect(promise).to.be.rejectedWith(Error, 'an error message');

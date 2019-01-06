@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'; // eslint-disable-line
 import uuid from 'uuid/v4';
 import Promise from 'bluebird';
+import serializeError from 'serialize-error';
 
 export class PromiseIpcMain {
   constructor(opts) {
@@ -26,7 +27,7 @@ export class PromiseIpcMain {
           case 'success':
             return resolve(returnData);
           case 'failure':
-            return reject(new Error(returnData));
+            return reject(returnData);
           default:
             return reject(new Error(`Unexpected IPC call status "${status}" in ${route}`));
         }
@@ -53,8 +54,7 @@ export class PromiseIpcMain {
           event.sender.send(replyChannel, 'success', results);
         })
         .catch((e) => {
-          const message = e && e.message ? e.message : e;
-          event.sender.send(replyChannel, 'failure', message);
+          event.sender.send(replyChannel, 'failure', serializeError(e));
         });
     });
   }
