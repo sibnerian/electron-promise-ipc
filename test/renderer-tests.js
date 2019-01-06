@@ -141,7 +141,9 @@ describe('renderer', () => {
     it('when listener returns rejected promise, sends failure + error to the main process', (done) => {
       renderer.on(route, () => Promise.reject(new Error('foober')));
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', new Error('foober')]);
+        expect(status).to.eql('failure');
+        expect(result.name).to.eql('Error');
+        expect(result.message).to.eql('foober');
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
@@ -150,7 +152,37 @@ describe('renderer', () => {
     it('lets a listener reject with a simple string', (done) => {
       renderer.on(route, () => Promise.reject('goober'));
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', new Error('goober')]);
+        expect([status, result]).to.eql(['failure', 'goober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('lets a listener reject with a function', (done) => {
+      renderer.on(route, () => Promise.reject(() => 'yay!'));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['failure', '[Function: anonymous]']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('lets a listener reject with a custom error', (done) => {
+      renderer.on(route, () => {
+        const custom = new Error('message');
+        custom.obj = { foo: 'bar' };
+        custom.array = ['one', 'two'];
+        custom.func = () => 'yay!';
+        custom.self = custom;
+        return Promise.reject(custom);
+      });
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect(status).to.eql('failure');
+        expect(result.message).to.eql('message');
+        expect(result.obj).to.eql({ foo: 'bar' });
+        expect(result.array).to.eql(['one', 'two']);
+        expect(result.func).to.eql(undefined);
+        expect(result.self).to.eql('[Circular]');
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
@@ -161,7 +193,9 @@ describe('renderer', () => {
         throw new Error('oh no');
       });
       ipcMain.once('replyChannel', (event, status, result) => {
-        expect([status, result]).to.eql(['failure', new Error('oh no')]);
+        expect(status).to.eql('failure');
+        expect(result.name).to.eql('Error');
+        expect(result.message).to.eql('oh no');
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'dataArg1');

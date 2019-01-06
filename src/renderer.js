@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron'; // eslint-disable-line
 import uuid from 'uuid/v4';
 import Promise from 'bluebird';
+import serializeError from 'serialize-error';
 
 export class PromiseIpcRenderer {
   constructor(opts) {
@@ -52,9 +53,7 @@ export class PromiseIpcRenderer {
           ipcRenderer.send(replyChannel, 'success', results);
         })
         .catch((e) => {
-          ipcRenderer.send(replyChannel, 'failure',
-            e instanceof Error ? e : new Error(e)
-          );
+          ipcRenderer.send(replyChannel, 'failure', serializeError(e));
         });
     });
   }

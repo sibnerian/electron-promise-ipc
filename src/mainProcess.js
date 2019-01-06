@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'; // eslint-disable-line
 import uuid from 'uuid/v4';
 import Promise from 'bluebird';
+import serializeError from 'serialize-error';
 
 export class PromiseIpcMain {
   constructor(opts) {
@@ -53,9 +54,7 @@ export class PromiseIpcMain {
           event.sender.send(replyChannel, 'success', results);
         })
         .catch((e) => {
-          event.sender.send(replyChannel, 'failure',
-            e instanceof Error ? e : new Error(e)
-          );
+          event.sender.send(replyChannel, 'failure', serializeError(e));
         });
     });
   }
