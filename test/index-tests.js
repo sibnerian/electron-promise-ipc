@@ -1,10 +1,9 @@
-import chai from 'chai';
+import { expect } from 'chai';
 
 const proxyquire = require('proxyquire').noPreserveCache();
 
 const renderer = { renderer: true };
 const mainProcess = { mainProcess: true };
-const expect = chai.expect;
 
 describe('index', () => {
   it('imports the renderer promiseIpc in the renderer environment', () => {

@@ -1,12 +1,11 @@
 import proxyquire from 'proxyquire';
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
 
 const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 
 chai.use(chaiAsPromised);
-const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
 const generateRoute = (function generateRoute() {
@@ -150,6 +149,7 @@ describe('renderer', () => {
     });
 
     it('lets a listener reject with a simple string', (done) => {
+      // eslint-disable-next-line prefer-promise-reject-errors
       renderer.on(route, () => Promise.reject('goober'));
       ipcMain.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['failure', 'goober']);
@@ -159,6 +159,7 @@ describe('renderer', () => {
     });
 
     it('lets a listener reject with a function', (done) => {
+      // eslint-disable-next-line prefer-promise-reject-errors
       renderer.on(route, () => Promise.reject(() => 'yay!'));
       ipcMain.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['failure', '[Function: anonymous]']);

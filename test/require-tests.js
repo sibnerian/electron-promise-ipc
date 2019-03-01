@@ -1,10 +1,8 @@
-import chai from 'chai';
+import { expect } from 'chai';
 // we are main process by default
 const defaultExport = require('../build/index');
 
-const expect = chai.expect;
-const PromiseIpc = defaultExport.PromiseIpc;
-const PromiseIpcMain = defaultExport.PromiseIpcMain;
+const { PromiseIpc, PromiseIpcMain } = defaultExport;
 
 describe('requiring the built module', () => {
   it('sets PromiseIpcMain function property on the export and PromiseIpc as an alias', () => {

@@ -1,5 +1,5 @@
 import proxyquire from 'proxyquire';
-import chai from 'chai';
+import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import Promise from 'bluebird';
 import lolex from 'lolex';
@@ -7,14 +7,13 @@ import lolex from 'lolex';
 const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 
 chai.use(chaiAsPromised);
-const expect = chai.expect;
 const uuid = 'totally_random_uuid';
 
 const mainProcessDefault = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   'uuid/v4': () => uuid,
 });
-const PromiseIpc = mainProcessDefault.PromiseIpc;
+const { PromiseIpc } = mainProcessDefault;
 
 const generateRoute = (function generateRoute() {
   let i = 1;
@@ -72,6 +71,7 @@ describe('mainProcess', () => {
     });
 
     it('lets listener reject with a simple string', (done) => {
+      // eslint-disable-next-line prefer-promise-reject-errors
       mainProcess.on(route, () => Promise.reject('goober'));
       ipcRenderer.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['failure', 'goober']);
@@ -81,6 +81,7 @@ describe('mainProcess', () => {
     });
 
     it('lets a listener reject with a function', (done) => {
+      // eslint-disable-next-line prefer-promise-reject-errors
       mainProcess.on(route, () => Promise.reject(() => 'yay!'));
       ipcRenderer.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['failure', '[Function: anonymous]']);
