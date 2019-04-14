@@ -1,6 +1,6 @@
 {
   "name": "electron-promise-ipc",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "npm run --silent lint && npm run build",
