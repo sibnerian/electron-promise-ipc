@@ -2,12 +2,14 @@ import { ipcRenderer } from 'electron'; // eslint-disable-line
 import uuid from 'uuid/v4';
 import Promise from 'bluebird';
 import serializeError from 'serialize-error';
+import Map from 'es6-map';
 
 export class PromiseIpcRenderer {
   constructor(opts) {
     if (opts) {
       this.maxTimeoutMs = opts.maxTimeoutMs;
     }
+    this.listenerMap = new Map();
   }
 
   send(route, ...dataArgs) {
@@ -42,20 +44,34 @@ export class PromiseIpcRenderer {
     });
   }
 
-  // If I ever implement `off`, then this method will actually use `this`.
-  // eslint-disable-next-line class-methods-use-this
   on(route, listener) {
-    ipcRenderer.on(route, (event, replyChannel, ...dataArgs) => {
+    // If listener has already been added, don't add it again.
+    if (this.listenerMap.has(listener)) {
+      return this;
+    }
+    const wrappedListener = (event, replyChannel, ...dataArgs) => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
-      Promise.resolve().then(() => listener(...dataArgs))
+      Promise.resolve()
+        .then(() => listener(...dataArgs))
         .then((results) => {
           ipcRenderer.send(replyChannel, 'success', results);
         })
         .catch((e) => {
           ipcRenderer.send(replyChannel, 'failure', serializeError(e));
         });
-    });
+    };
+    this.listenerMap.set(listener, wrappedListener);
+    ipcRenderer.on(route, wrappedListener);
+    return this;
+  }
+
+  off(route, listener) {
+    const wrappedListener = this.listenerMap.get(listener);
+    if (wrappedListener) {
+      ipcRenderer.removeListener(route, wrappedListener);
+      this.listenerMap.delete(listener);
+    }
   }
 }
 

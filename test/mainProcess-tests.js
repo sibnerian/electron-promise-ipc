@@ -3,6 +3,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import Promise from 'bluebird';
 import lolex from 'lolex';
+import { fail } from 'assert';
 
 const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 
@@ -18,7 +19,7 @@ const { PromiseIpc } = mainProcessDefault;
 const generateRoute = (function generateRoute() {
   let i = 1;
   return () => i++; // eslint-disable-line no-plusplus
-}());
+})();
 
 describe('mainProcess', () => {
   it('exports a default that’s an instance of PromiseIpc', () => {
@@ -27,18 +28,16 @@ describe('mainProcess', () => {
 
   describe('on', () => {
     let mainProcess;
-    let route = generateRoute();
+    let route;
 
     beforeEach(() => {
       mainProcess = new PromiseIpc();
+      route = generateRoute();
     });
 
     afterEach(() => {
-      // why not remove all listeners? a bug in the library of course...
-      // https://github.com/jsantell/electron-ipc-mock/pull/4
-      // ipcMain.removeAllListeners();
-      // instead we'll generate new routes for now, until the PR goes through.
-      route = generateRoute();
+      ipcMain.removeAllListeners();
+      ipcRenderer.removeAllListeners();
     });
 
     it('when listener returns resolved promise, sends success + value to the renderer', (done) => {
@@ -132,6 +131,17 @@ describe('mainProcess', () => {
       });
       ipcRenderer.send(route, 'replyChannel', 'foo', 'bar', 'baz');
     });
+
+    it('lets you add the same listener twice and does not break', (done) => {
+      const cb = () => Promise.resolve('foober');
+      mainProcess.on(route, cb);
+      mainProcess.on(route, cb);
+      ipcRenderer.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'foober']);
+        done();
+      });
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
   });
 
   describe('send', () => {
@@ -154,7 +164,7 @@ describe('mainProcess', () => {
       return expect(promise).to.eventually.eql('result');
     });
 
-    it('sends the reply channel and any additional arguments', () => {
+    it('sends the reply channel any additional arguments', () => {
       const replyChannel = `route#${uuid}`;
       let argumentsAfterEvent;
       ipcRenderer.once('route', (event, ...rest) => {
@@ -182,7 +192,10 @@ describe('mainProcess', () => {
         event.sender.send(replyChannel, 'unrecognized', 'an error message');
       });
       const promise = mainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
-      return expect(promise).to.be.rejectedWith(Error, 'Unexpected IPC call status "unrecognized" in route');
+      return expect(promise).to.be.rejectedWith(
+        Error,
+        'Unexpected IPC call status "unrecognized" in route',
+      );
     });
 
     describe('timeouts', () => {
@@ -198,7 +211,9 @@ describe('mainProcess', () => {
 
       it('fails if it times out', () => {
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         return p;
@@ -212,12 +227,52 @@ describe('mainProcess', () => {
           }, 6000);
         });
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
         return p;
       });
+    });
+  });
+
+  describe('off', () => {
+    let mainProcess;
+    let route;
+
+    beforeEach(() => {
+      mainProcess = new PromiseIpc();
+      route = generateRoute();
+    });
+
+    afterEach(() => {
+      ipcMain.removeAllListeners();
+      ipcRenderer.removeAllListeners();
+    });
+
+    it('Does not resolve the promise if .off() was called', (done) => {
+      const listener = () => Promise.resolve('foober');
+      mainProcess.on(route, listener);
+      ipcRenderer.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      mainProcess.off(route, listener);
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Allows you to call .off() >1 times with no ill effects', (done) => {
+      const listener = () => Promise.resolve('foober');
+      mainProcess.on(route, listener);
+      ipcRenderer.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      mainProcess.off(route, listener);
+      mainProcess.off(route, listener);
+      mainProcess.off(route, listener);
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
     });
   });
 });

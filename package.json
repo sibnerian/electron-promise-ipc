@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.3",
+    "es6-map": "^0.1.5",
     "is-electron-renderer": "^2.0.1",
     "serialize-error": "^3.0.0",
     "uuid": "^3.0.1"
@@ -40,7 +41,7 @@
     "coveralls": "^3.0.3",
     "cross-env": "^5.2.0",
     "electron": "^4.0.6",
-    "electron-ipc-mock": "^0.0.2",
+    "electron-ipc-mock": "^0.0.3",
     "eslint": "^5.14.1",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.16.0",

@@ -2,12 +2,14 @@ import { ipcMain } from 'electron'; // eslint-disable-line
 import uuid from 'uuid/v4';
 import Promise from 'bluebird';
 import serializeError from 'serialize-error';
+import Map from 'es6-map';
 
 export class PromiseIpcMain {
   constructor(opts) {
     if (opts) {
       this.maxTimeoutMs = opts.maxTimeoutMs;
     }
+    this.listenerMap = new Map();
   }
 
   // Send requires webContents -- see http://electron.atom.io/docs/api/ipc-main/
@@ -43,20 +45,36 @@ export class PromiseIpcMain {
     });
   }
 
-  // If I ever implement `off`, then this method will actually use `this`.
-  // eslint-disable-next-line class-methods-use-this
   on(route, listener) {
-    ipcMain.on(route, (event, replyChannel, ...dataArgs) => {
+    // If listener has already been added, don't add it again.
+    if (this.listenerMap.has(listener)) {
+      return this;
+    }
+    // This function _wraps_ the listener argument. We maintain a map of
+    // listener -> wrapped listener in order to implement #off().
+    const wrappedListener = (event, replyChannel, ...dataArgs) => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
-      Promise.resolve().then(() => listener(...dataArgs))
+      Promise.resolve()
+        .then(() => listener(...dataArgs))
         .then((results) => {
           event.sender.send(replyChannel, 'success', results);
         })
         .catch((e) => {
           event.sender.send(replyChannel, 'failure', serializeError(e));
         });
-    });
+    };
+    this.listenerMap.set(listener, wrappedListener);
+    ipcMain.on(route, wrappedListener);
+    return this;
+  }
+
+  off(route, listener) {
+    const wrappedListener = this.listenerMap.get(listener);
+    if (wrappedListener) {
+      ipcMain.removeListener(route, wrappedListener);
+      this.listenerMap.delete(listener);
+    }
   }
 }
 

@@ -2,6 +2,7 @@ import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
+import { fail } from 'assert';
 
 const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 
@@ -11,7 +12,7 @@ const uuid = 'totally_random_uuid';
 const generateRoute = (function generateRoute() {
   let i = 1;
   return () => i++; // eslint-disable-line no-plusplus
-}());
+})();
 
 const renderer = proxyquire('../src/renderer', {
   electron: { ipcRenderer },
@@ -62,7 +63,10 @@ describe('renderer', () => {
         event.sender.send(replyChannel, 'unrecognized', 'an error message');
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
-      return expect(promise).to.be.rejectedWith(Error, 'Unexpected IPC call status "unrecognized" in route');
+      return expect(promise).to.be.rejectedWith(
+        Error,
+        'Unexpected IPC call status "unrecognized" in route',
+      );
     });
     describe('timeouts', () => {
       let clock;
@@ -101,6 +105,7 @@ describe('renderer', () => {
   });
 
   describe('on', () => {
+    let route;
     let mockWebContents;
     before((done) => {
       ipcMain.once('saveMockWebContentsSend', (event) => {
@@ -109,14 +114,14 @@ describe('renderer', () => {
       });
       ipcRenderer.send('saveMockWebContentsSend');
     });
-    let route = generateRoute();
+
+    beforeEach(() => {
+      route = generateRoute();
+    });
 
     afterEach(() => {
-      // why not remove all listeners? a bug in the library of course...
-      // https://github.com/jsantell/electron-ipc-mock/pull/4
-      // ipcMain.removeAllListeners();
-      // instead we'll generate new routes for now, until the PR goes through.
-      route = generateRoute();
+      ipcMain.removeAllListeners();
+      ipcRenderer.removeAllListeners();
     });
 
     it('when listener returns resolved promise, sends success + value to the main process', (done) => {
@@ -209,6 +214,62 @@ describe('renderer', () => {
         done();
       });
       mockWebContents.send(route, 'replyChannel', 'foo', 'bar', 'baz');
+    });
+
+    it('lets you add the same listener twice and does not break', (done) => {
+      const cb = () => Promise.resolve('foober');
+      renderer.on(route, cb);
+      renderer.on(route, cb);
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'foober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+  });
+
+  describe('off', () => {
+    let route;
+    let mockWebContents;
+    before((done) => {
+      ipcMain.once('saveMockWebContentsSend', (event) => {
+        mockWebContents = event.sender;
+        done();
+      });
+      ipcRenderer.send('saveMockWebContentsSend');
+    });
+
+    beforeEach(() => {
+      route = generateRoute();
+    });
+
+    afterEach(() => {
+      ipcMain.removeAllListeners();
+      ipcRenderer.removeAllListeners();
+    });
+
+    it('Does not resolve the promise if .off() was called', (done) => {
+      const listener = () => Promise.resolve('foober');
+      renderer.on(route, listener);
+      ipcMain.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      renderer.off(route, listener);
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Allows you to call .off() >1 times with no ill effects', (done) => {
+      const listener = () => Promise.resolve('foober');
+      renderer.on(route, listener);
+      ipcMain.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      renderer.off(route, listener);
+      renderer.off(route, listener);
+      renderer.off(route, listener);
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
     });
   });
 });

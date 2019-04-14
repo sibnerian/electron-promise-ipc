@@ -6,6 +6,8 @@
   },
   "rules": {
     "global-require": 0,
-    "comma-dangle": 0
+    "comma-dangle": 0,
+    "wrap-iife": ["error", "inside"],
+    "implicit-arrow-linebreak": "warn"
   }
 }
