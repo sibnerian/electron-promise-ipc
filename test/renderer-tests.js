@@ -14,10 +14,16 @@ const generateRoute = (function generateRoute() {
   return () => i++; // eslint-disable-line no-plusplus
 })();
 
-const renderer = proxyquire('../src/renderer', {
-  electron: { ipcRenderer },
+// Need a 2-layer proxyquire now because of the base class dependencies.
+const Base = proxyquire('../src/base', {
   'uuid/v4': () => uuid,
 });
+
+const renderer = proxyquire('../src/renderer', {
+  electron: { ipcRenderer },
+  './base': Base,
+});
+
 const { PromiseIpc } = renderer;
 
 describe('renderer', () => {

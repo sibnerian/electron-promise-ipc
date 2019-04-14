@@ -51,7 +51,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "^5.2.0",
     "nyc": "^13.3.0",
-    "proxyquire": "^1.7.11",
+    "proxyquire": "2.1.0",
     "rimraf": "^2.6.3",
     "sinon": "^7.2.5",
     "sinon-chai": "^3.3.0"

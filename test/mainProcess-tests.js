@@ -10,9 +10,14 @@ const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
 chai.use(chaiAsPromised);
 const uuid = 'totally_random_uuid';
 
+// Need a 2-layer proxyquire now because of the base class dependencies.
+const Base = proxyquire('../src/base', {
+  'uuid/v4': () => uuid,
+});
+
 const mainProcessDefault = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
-  'uuid/v4': () => uuid,
+  './base': Base,
 });
 const { PromiseIpc } = mainProcessDefault;
 
