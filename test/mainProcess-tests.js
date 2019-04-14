@@ -19,6 +19,7 @@ const mainProcessDefault = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   './base': Base,
 });
+
 const { PromiseIpc } = mainProcessDefault;
 
 const generateRoute = (function generateRoute() {
@@ -49,6 +50,16 @@ describe('mainProcess', () => {
       mainProcess.on(route, () => Promise.resolve('foober'));
       ipcRenderer.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['success', 'foober']);
+        done();
+      });
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('overrides the previous listener when one is added on the same route', (done) => {
+      mainProcess.on(route, () => Promise.resolve('foober'));
+      mainProcess.on(route, () => Promise.resolve('goober'));
+      ipcRenderer.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'goober']);
         done();
       });
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
@@ -276,6 +287,38 @@ describe('mainProcess', () => {
       mainProcess.off(route, listener);
       mainProcess.off(route, listener);
       mainProcess.off(route, listener);
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Is aliased to removeListener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      mainProcess.on(route, listener);
+      ipcRenderer.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      mainProcess.removeListener(route, listener);
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Does not remove listener for route if called with a different listener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      mainProcess.on(route, listener);
+      ipcRenderer.once('replyChannel', () => {
+        done(); // should succeed
+      });
+      mainProcess.removeListener(route, () => {});
+      ipcRenderer.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('If called with just route, removes the listener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      mainProcess.on(route, listener);
+      ipcRenderer.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      mainProcess.removeListener(route);
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
       setTimeout(done, 20);
     });

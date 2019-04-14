@@ -139,6 +139,16 @@ describe('renderer', () => {
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
     });
 
+    it('overrides the previous listener when one is added on the same route', (done) => {
+      renderer.on(route, () => Promise.resolve('foober'));
+      renderer.on(route, () => Promise.resolve('goober'));
+      ipcMain.once('replyChannel', (event, status, result) => {
+        expect([status, result]).to.eql(['success', 'goober']);
+        done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
     it('when listener synchronously returns, sends success + value to the main process', (done) => {
       renderer.on(route, () => Promise.resolve('foober'));
       ipcMain.once('replyChannel', (event, status, result) => {
@@ -274,6 +284,38 @@ describe('renderer', () => {
       renderer.off(route, listener);
       renderer.off(route, listener);
       renderer.off(route, listener);
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Is aliased to removeListener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      renderer.on(route, listener);
+      ipcMain.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      renderer.removeListener(route, listener);
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+      setTimeout(done, 20);
+    });
+
+    it('Does not remove listener for route if called with a different listener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      renderer.on(route, listener);
+      ipcMain.once('replyChannel', () => {
+        done(); // should succeed
+      });
+      renderer.removeListener(route, () => {});
+      mockWebContents.send(route, 'replyChannel', 'dataArg1');
+    });
+
+    it('If called with just route, removes the listener', (done) => {
+      const listener = () => Promise.resolve('foober');
+      renderer.on(route, listener);
+      ipcMain.once('replyChannel', () => {
+        fail('There should be no reply since ".off()" was called.');
+      });
+      renderer.removeListener(route);
       mockWebContents.send(route, 'replyChannel', 'dataArg1');
       setTimeout(done, 20);
     });

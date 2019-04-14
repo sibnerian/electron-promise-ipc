@@ -11,6 +11,7 @@ export default class PromiseIpcBase {
     }
     // either ipcRenderer or ipcMain
     this.eventEmitter = eventEmitter;
+    this.routeListenerMap = new Map();
     this.listenerMap = new Map();
   }
 
@@ -47,9 +48,15 @@ export default class PromiseIpcBase {
   }
 
   on(route, listener) {
-    // If listener has already been added, don't add it again.
-    if (this.listenerMap.has(listener)) {
+    const prevListener = this.routeListenerMap.get(route);
+    // If listener has already been added for this route, don't add it again.
+    if (prevListener === listener) {
       return this;
+    }
+    // Only one listener may be active for a given route.
+    // If two are active promises it won't work correctly - that's a race condition.
+    if (this.routeListenerMap.has(route)) {
+      this.off(route, prevListener);
     }
     // This function _wraps_ the listener argument. We maintain a map of
     // listener -> wrapped listener in order to implement #off().
@@ -65,16 +72,24 @@ export default class PromiseIpcBase {
           event.sender.send(replyChannel, 'failure', serializeError(e));
         });
     };
+    this.routeListenerMap.set(route, listener);
     this.listenerMap.set(listener, wrappedListener);
     this.eventEmitter.on(route, wrappedListener);
     return this;
   }
 
   off(route, listener) {
-    const wrappedListener = this.listenerMap.get(listener);
-    if (wrappedListener) {
-      this.eventEmitter.removeListener(route, wrappedListener);
-      this.listenerMap.delete(listener);
+    const registeredListener = this.routeListenerMap.get(route);
+    if (listener && listener !== registeredListener) {
+      return; // trying to remove the wrong listener, so do nothing.
     }
+    const wrappedListener = this.listenerMap.get(registeredListener);
+    this.eventEmitter.removeListener(route, wrappedListener);
+    this.listenerMap.delete(registeredListener);
+    this.routeListenerMap.delete(route);
+  }
+
+  removeListener(route, listener) {
+    this.off(route, listener);
   }
 }
