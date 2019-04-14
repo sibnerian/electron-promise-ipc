@@ -5,6 +5,7 @@
 #### Promise-y IPC calls in Electron.
 
 ## Installation
+
 ```sh
 npm install --save electron-promise-ipc
 ```
@@ -25,21 +26,22 @@ promiseIpc.on('writeSettingsFile', (newSettings) => {
 // in renderer
 import promiseIpc from 'electron-promise-ipc';
 
-promiseIpc.send('writeSettingsFile', '{ "name": "Jeff" }')
-  .then(() => console.log('You wrote the settings!'))
-  .catch(e => console.error(e));
+promiseIpc
+  .send('writeSettingsFile', '{ "name": "Jeff" }')
+  .then(() => console.log('You wrote the settings!'))
+  .catch((e) => console.error(e));
 ```
 
 You can also send data from the main process to a renderer, if you pass in its [WebContents](http://electron.atom.io/docs/api/web-contents) object.
-
 
 ```js
 // in main process
 import promiseIpc from 'electron-promise-ipc';
 
-promiseIpc.send('getRendererData', webContentsForRenderer)
-  .then(rendererData => console.log(rendererData))
-  .catch(e => console.error(e));
+promiseIpc
+  .send('getRendererData', webContentsForRenderer)
+  .then((rendererData) => console.log(rendererData))
+  .catch((e) => console.error(e));
 
 // in renderer
 import promiseIpc from 'electron-promise-ipc';
@@ -54,6 +56,8 @@ Any arguments to `send()` will be passed directly to the event listener from `on
 Note that because this is IPC, only JSON-serializable values can be passed as arguments or data. Classes and functions will generally not survive a round of serialization/deserialization.
 
 ## Advanced usage
+
+#### Timeouts
 
 By default, the promise will wait forever for the other process to return it some data. If you want to set a timeout (after which the promise will be rejected automatically), you can create another instance of `PromiseIpc` like so:
 
@@ -70,9 +74,24 @@ import { PromiseIpc } from 'electron-promise-ipc';
 
 const promiseIpc = new PromiseIpc({ maxTimeoutMs: 2000 });
 
-promiseIpc.send('someRoute', '{ "name": "Jeff" }')
-  .then(() => console.log('You wrote the settings!'))
-  .catch(e => console.error(e)); // will error out after 2 seconds
+promiseIpc
+  .send('someRoute', '{ "name": "Jeff" }')
+  .then(() => console.log('You wrote the settings!'))
+  .catch((e) => console.error(e)); // will error out after 2 seconds
+```
+
+#### Removing Listeners
+
+You can remove a listener with the `off()` method. It's aliased to `removeListener()` as well.
+
+```js
+import promiseIpc from 'electron-promise-ipc';
+
+promiseIpc.on('someRoute', () => {
+  return something();
+});
+
+promiseIpc.off('someRoute'); // never mind
 ```
 
 ## License
