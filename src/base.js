@@ -64,7 +64,7 @@ export default class PromiseIpcBase {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
       Promise.resolve()
-        .then(() => listener(...dataArgs))
+        .then(() => listener(...dataArgs, event))
         .then((results) => {
           event.sender.send(replyChannel, 'success', results);
         })

@@ -224,10 +224,24 @@ describe('renderer', () => {
     });
 
     it('passes the received data args to the listener', (done) => {
-      renderer.on(route, (...args) => args.join(','));
+      //  Return all _data_ args, concatenated, but leave off the event arg.
+      renderer.on(route, (...args) => args.slice(0, -1).join(','));
       ipcMain.once('replyChannel', (event, status, result) => {
         expect([status, result]).to.eql(['success', 'foo,bar,baz']);
         done();
+      });
+      mockWebContents.send(route, 'replyChannel', 'foo', 'bar', 'baz');
+    });
+
+    it('passes the event to the listener after data args', (done) => {
+      renderer.on(route, (foo, bar, baz, event) => {
+        expect([foo, bar, baz]).to.eql(['foo', 'bar', 'baz']);
+        expect(event.sender.send).to.be.instanceOf(Function);
+        return null;
+      });
+      ipcMain.once('replyChannel', (event, status, result) => {
+        // If there was an error, then that error will be stored in result.
+        done(result);
       });
       mockWebContents.send(route, 'replyChannel', 'foo', 'bar', 'baz');
     });
