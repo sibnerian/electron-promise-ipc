@@ -19,7 +19,7 @@ The most common use case: from the renderer, get data from the main process as a
 import promiseIpc from 'electron-promise-ipc';
 import fsp from 'fs-promise';
 
-promiseIpc.on('writeSettingsFile', (newSettings) => {
+promiseIpc.on('writeSettingsFile', (newSettings, event) => {
   return fsp.writeFile('~/.settings', newSettings);
 });
 
@@ -46,12 +46,12 @@ promiseIpc
 // in renderer
 import promiseIpc from 'electron-promise-ipc';
 
-promiseIpc.on('getRendererData', () => {
+promiseIpc.on('getRendererData', (event) => {
   return getSomeSuperAwesomeRendererData();
 });
 ```
 
-Any arguments to `send()` will be passed directly to the event listener from `on()`. If there is an error thrown in the main process's listener, or if the listener returns a rejected promise (e.g., lack of permissions for a file read), then the `send()` promise is rejected with the same error.
+Any arguments to `send()` will be passed directly to the event listener from `on()`, followed by the IPC [event](https://electronjs.org/docs/api/ipc-main#event-object) object. If there is an error thrown in the main process's listener, or if the listener returns a rejected promise (e.g., lack of permissions for a file read), then the `send()` promise is rejected with the same error.
 
 Note that because this is IPC, only JSON-serializable values can be passed as arguments or data. Classes and functions will generally not survive a round of serialization/deserialization.
 
