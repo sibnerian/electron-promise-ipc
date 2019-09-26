@@ -1,7 +1,6 @@
 import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import Promise from 'bluebird';
 import lolex from 'lolex';
 import { fail } from 'assert';
 
