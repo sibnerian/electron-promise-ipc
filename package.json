@@ -23,7 +23,6 @@
     "electron": "^1.4.15"
   },
   "dependencies": {
-    "bluebird": "^3.5.3",
     "es6-map": "^0.1.5",
     "is-electron-renderer": "^2.0.1",
     "serialize-error": "^3.0.0",
