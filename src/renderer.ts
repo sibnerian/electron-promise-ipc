@@ -1,12 +1,15 @@
 import { ipcRenderer } from 'electron'; // eslint-disable-line
-import PromiseIpcBase from './base';
+import PromiseIpcBase, { Options } from './base';
 
 export class PromiseIpcRenderer extends PromiseIpcBase {
-  constructor(opts) {
+  public PromiseIpc?: any;
+  public PromiseIpcRenderer?: any;
+
+  constructor(opts?: Options) {
     super(opts, ipcRenderer);
   }
-
-  send(route, ...dataArgs) {
+  
+  public send(route: string, ...dataArgs: any): Promise<void> {
     return super.send(route, ipcRenderer, ...dataArgs);
   }
 }
