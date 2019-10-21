@@ -7,7 +7,7 @@ const mainProcess = { mainProcess: true };
 
 describe('index', () => {
   it('imports the renderer promiseIpc in the renderer environment', () => {
-    const promiseIpc = proxyquire('../src/index', {
+    const promiseIpc = proxyquire('../build/index', {
       './renderer': renderer,
       './mainProcess': mainProcess,
       'is-electron-renderer': true,
@@ -16,7 +16,7 @@ describe('index', () => {
   });
 
   it('imports the main process promiseIpc in the mainProcess environment', () => {
-    const promiseIpc = proxyquire('../src/index', {
+    const promiseIpc = proxyquire('../build/index', {
       './renderer': renderer,
       './mainProcess': mainProcess,
       'is-electron-renderer': false,

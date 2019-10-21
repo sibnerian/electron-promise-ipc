@@ -15,11 +15,11 @@ const generateRoute = (function generateRoute() {
 })();
 
 // Need a 2-layer proxyquire now because of the base class dependencies.
-const Base = proxyquire('../src/base', {
+const Base = proxyquire('../build/base', {
   'uuid/v4': () => uuid,
 });
 
-const renderer = proxyquire('../src/renderer', {
+const renderer = proxyquire('../build/renderer', {
   electron: { ipcRenderer },
   './base': Base,
 });

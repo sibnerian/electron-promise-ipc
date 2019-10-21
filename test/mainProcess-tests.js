@@ -10,11 +10,11 @@ chai.use(chaiAsPromised);
 const uuid = 'totally_random_uuid';
 
 // Need a 2-layer proxyquire now because of the base class dependencies.
-const Base = proxyquire('../src/base', {
+const Base = proxyquire('../build/base', {
   'uuid/v4': () => uuid,
 });
 
-const mainProcessDefault = proxyquire('../src/mainProcess', {
+const mainProcessDefault = proxyquire('../build/mainProcess', {
   electron: { ipcMain },
   './base': Base,
 });
@@ -240,8 +240,7 @@ describe('mainProcess', () => {
 
       it('fails if it times out', () => {
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () =>
-          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
 
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
@@ -256,8 +255,7 @@ describe('mainProcess', () => {
           }, 6000);
         });
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () =>
-          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
