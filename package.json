@@ -3,12 +3,12 @@
   "version": "1.6.0",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
-    "pretest": "npm run --silent lint && npm run build",
+    "pretest": "npm run build && npm run --silent lint ",
     "coverage": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "cross-env NODE_ENV=test npm run coverage",
     "lint": "eslint .",
-    "build": "mkdirp build && babel src --out-dir build --source-maps",
+    "build": "mkdirp build && tsc && babel src --out-dir build --source-maps",
     "prepublish": "npm run build",
     "clean": "rimraf build"
   },
@@ -23,9 +23,12 @@
     "electron": "^1.4.15"
   },
   "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
     "es6-map": "^0.1.5",
     "is-electron-renderer": "^2.0.1",
     "serialize-error": "^3.0.0",
+    "typescript": "^3.6.4",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
@@ -33,6 +36,7 @@
     "@babel/core": "^7.3.4",
     "@babel/polyfill": "^7.2.5",
     "@babel/preset-env": "^7.3.4",
+    "@babel/preset-typescript": "^7.6.0",
     "@babel/register": "^7.0.0",
     "babel-plugin-istanbul": "^5.1.1",
     "chai": "^4.2.0",
