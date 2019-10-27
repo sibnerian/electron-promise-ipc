@@ -3,7 +3,7 @@
   "version": "1.6.0",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
-    "pretest": "npm run build && npm run --silent lint ",
+    "pretest": "npm run --silent lint && npm run build",
     "coverage": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "cross-env NODE_ENV=test npm run coverage",
