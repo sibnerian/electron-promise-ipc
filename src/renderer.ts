@@ -8,8 +8,7 @@ export class PromiseIpcRenderer extends PromiseIpcBase {
   constructor(opts?: Options) {
     super(opts, ipcRenderer);
   }
-  
-  public send(route: string, ...dataArgs: any): Promise<void> {
+  public send(route: string, ...dataArgs: any): Promise<unknown> {
     return super.send(route, ipcRenderer, ...dataArgs);
   }
 }

@@ -2,20 +2,17 @@
  import serializeError from 'serialize-error';
  import Map from 'es6-map';
  import { IpcMain, IpcRenderer, WebContents, IpcMessageEvent } from 'electron';
-//  import { ipcMain } from 'electron'; // eslint-disable-line
 
 export type Listener = (event?: IpcMessageEvent, ...dataArgs: any) => void
 export type Options = { maxTimeoutMs?: number }
 
  export default class PromiseIpcBase {
-   public eventEmitter: IpcMain | IpcRenderer;
-   public maxTimeoutMs: number;
-   public routeListenerMap: Map;
-   public listenerMap: Map;
-   private verbose: boolean;
+   private eventEmitter: IpcMain | IpcRenderer;
+   private maxTimeoutMs: number;
+   private routeListenerMap: Map;
+   private listenerMap: Map;
 
-   constructor(opts: { maxTimeoutMs?: number, verbose?: boolean } | undefined, eventEmitter: IpcMain | IpcRenderer) {
-    if (opts && opts.verbose) this.verbose = opts.verbose;
+   constructor(opts: { maxTimeoutMs?: number} | undefined, eventEmitter: IpcMain | IpcRenderer) {
 
     if (opts && opts.maxTimeoutMs) {
       this.maxTimeoutMs = opts.maxTimeoutMs;
@@ -27,7 +24,7 @@ export type Options = { maxTimeoutMs?: number }
      this.listenerMap = new Map();
    }
 
-   public send(route: string, sender: WebContents | IpcRenderer, ...dataArgs: any): Promise<void> {
+   public send(route: string, sender: WebContents | IpcRenderer, ...dataArgs: any): Promise<unknown> {
      return new Promise((resolve, reject) => {
        const replyChannel: string = `${route}#${uuid()}`;
        let timeout: any;
