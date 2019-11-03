@@ -1,6 +1,5 @@
 import uuid from 'uuid/v4';
 import { serializeError } from 'serialize-error';
-import Map from 'es6-map';
 import { IpcMain, IpcRenderer, WebContents, IpcMessageEvent } from 'electron';
 
 /**
@@ -32,15 +31,18 @@ export type Listener =
       ): void;
     };
 export type Options = { maxTimeoutMs?: number };
+// There's an `any` here it's the only way that the typescript compiler allows you to call listener(...dataArgs, event).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type WrappedListener = { (event: IpcMessageEvent, replyChannel: string, ...dataArgs: any[]): void };
 
 export default class PromiseIpcBase {
   private eventEmitter: IpcMain | IpcRenderer;
 
   private maxTimeoutMs: number;
 
-  private routeListenerMap: Map;
+  private routeListenerMap: Map<string, Listener>;
 
-  private listenerMap: Map;
+  private listenerMap: Map<Listener, WrappedListener>;
 
   constructor(opts: { maxTimeoutMs?: number } | undefined, eventEmitter: IpcMain | IpcRenderer) {
     if (opts && opts.maxTimeoutMs) {
@@ -55,27 +57,30 @@ export default class PromiseIpcBase {
   public send(
     route: string,
     sender: WebContents | IpcRenderer,
-    ...dataArgs: [unknown]
+    ...dataArgs: unknown[]
   ): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const replyChannel = `${route}#${uuid()}`;
       let timeout: NodeJS.Timeout;
       let didTimeOut = false; // ipcRenderer will send a message back to replyChannel when it finishes calculating
 
-      this.eventEmitter.once(replyChannel, (event, status, returnData) => {
-        clearTimeout(timeout);
-        if (didTimeOut) {
-          return null;
-        }
-        switch (status) {
-          case 'success':
-            return resolve(returnData);
-          case 'failure':
-            return reject(returnData);
-          default:
-            return reject(new Error(`Unexpected IPC call status "${status}" in ${route}`));
-        }
-      });
+      this.eventEmitter.once(
+        replyChannel,
+        (event: IpcMessageEvent, status: string, returnData: unknown) => {
+          clearTimeout(timeout);
+          if (didTimeOut) {
+            return null;
+          }
+          switch (status) {
+            case 'success':
+              return resolve(returnData);
+            case 'failure':
+              return reject(returnData);
+            default:
+              return reject(new Error(`Unexpected IPC call status "${status}" in ${route}`));
+          }
+        },
+      );
       sender.send(route, replyChannel, ...dataArgs);
       if (this.maxTimeoutMs) {
         timeout = setTimeout(() => {
@@ -86,7 +91,7 @@ export default class PromiseIpcBase {
     });
   }
 
-  public on(route: string, listener: Listener): WebContents | PromiseIpcBase {
+  public on(route: string, listener: Listener): PromiseIpcBase {
     const prevListener = this.routeListenerMap.get(route); // If listener has already been added for this route, don't add it again.
     if (prevListener === listener) {
       return this;
@@ -94,7 +99,7 @@ export default class PromiseIpcBase {
     if (this.routeListenerMap.has(route)) {
       this.off(route, prevListener);
     } // This function _wraps_ the listener argument. We maintain a map of // listener -> wrapped listener in order to implement #off().
-    const wrappedListener = (event, replyChannel, ...dataArgs): void => {
+    const wrappedListener: WrappedListener = (event, replyChannel, ...dataArgs): void => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
       Promise.resolve()
@@ -112,7 +117,7 @@ export default class PromiseIpcBase {
     return this;
   }
 
-  public off(route: string, listener: Listener): void {
+  public off(route: string, listener?: Listener): void {
     const registeredListener = this.routeListenerMap.get(route);
     if (listener && listener !== registeredListener) {
       return; // trying to remove the wrong listener, so do nothing.
@@ -123,7 +128,7 @@ export default class PromiseIpcBase {
     this.routeListenerMap.delete(route);
   }
 
-  public removeListener(route: string, listener: Listener): void {
+  public removeListener(route: string, listener?: Listener): void {
     this.off(route, listener);
   }
 }

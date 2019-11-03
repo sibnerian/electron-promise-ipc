@@ -6,7 +6,7 @@ export class PromiseIpcRenderer extends PromiseIpcBase {
     super(opts, ipcRenderer);
   }
 
-  public send(route: string, ...dataArgs: [unknown]): Promise<unknown> {
+  public send(route: string, ...dataArgs: unknown[]): Promise<unknown> {
     return super.send(route, ipcRenderer, ...dataArgs);
   }
 }

@@ -7,7 +7,7 @@ export class PromiseIpcMain extends PromiseIpcBase {
   }
 
   // Send requires webContents -- see http://electron.atom.io/docs/api/ipc-main/
-  public send(route: string, webContents: WebContents, ...dataArgs: [unknown]): Promise<unknown> {
+  public send(route: string, webContents: WebContents, ...dataArgs: unknown[]): Promise<unknown> {
     return super.send(route, webContents, ...dataArgs);
   }
 }

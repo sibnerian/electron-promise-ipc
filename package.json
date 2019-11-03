@@ -23,7 +23,6 @@
     "electron": "^1.4.15"
   },
   "dependencies": {
-    "es6-map": "^0.1.5",
     "is-electron-renderer": "^2.0.1",
     "serialize-error": "^5.0.0",
     "uuid": "^3.0.1"
@@ -39,6 +38,7 @@
     "@babel/register": "^7.0.0",
     "@types/chai": "^4.2.4",
     "@types/chai-as-promised": "^7.1.2",
+    "@types/lolex": "^3.1.1",
     "@types/mocha": "^5.2.7",
     "@types/serialize-error": "^4.0.1",
     "@types/uuid": "^3.4.6",
@@ -58,7 +58,7 @@
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-react": "^7.12.4",
-    "lolex": "^1.5.2",
+    "lolex": "^1.6.0",
     "mkdirp": "^0.5.1",
     "mocha": "^5.2.0",
     "nyc": "^14.1.1",
