@@ -1,5 +1,10 @@
 {
-  "extends": "airbnb",
+  "parser": "@typescript-eslint/parser",
+  "extends": ["plugin:@typescript-eslint/recommended", "airbnb", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
   "env": {
     "node": true,
     "es6": true
@@ -8,6 +13,8 @@
     "global-require": 0,
     "comma-dangle": 0,
     "wrap-iife": ["error", "inside"],
-    "implicit-arrow-linebreak": "warn"
+    "implicit-arrow-linebreak": "warn",
+    "@typescript-eslint/no-explicit-any": 2,
+    "import/no-unresolved": 0
   }
 }

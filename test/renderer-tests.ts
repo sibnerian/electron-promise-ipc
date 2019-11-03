@@ -1,10 +1,12 @@
-import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
 import { fail } from 'assert';
+import electronIpcMock from 'electron-ipc-mock';
 
-const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
+const proxyquire: any = require('proxyquire'); // eslint-disable-line
+
+const { ipcRenderer, ipcMain } = electronIpcMock();
 
 chai.use(chaiAsPromised);
 const uuid = 'totally_random_uuid';
@@ -15,11 +17,11 @@ const generateRoute = (function generateRoute() {
 })();
 
 // Need a 2-layer proxyquire now because of the base class dependencies.
-const Base = proxyquire('../build/base', {
+const Base = proxyquire('../src/base', {
   'uuid/v4': () => uuid,
 });
 
-const renderer = proxyquire('../build/renderer', {
+const renderer = proxyquire('../src/renderer', {
   electron: { ipcRenderer },
   './base': Base,
 });
@@ -191,7 +193,7 @@ describe('renderer', () => {
 
     it('lets a listener reject with a custom error', (done) => {
       renderer.on(route, () => {
-        const custom = new Error('message');
+        const custom: Error & { [key: string]: any } = new Error('message');
         custom.obj = { foo: 'bar' };
         custom.array = ['one', 'two'];
         custom.func = () => 'yay!';

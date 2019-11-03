@@ -1,20 +1,22 @@
-import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
 import { fail } from 'assert';
+import electronIpcMock from 'electron-ipc-mock';
 
-const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
+const proxyquire: any = require('proxyquire'); // eslint-disable-line
+
+const { ipcRenderer, ipcMain } = electronIpcMock();
 
 chai.use(chaiAsPromised);
 const uuid = 'totally_random_uuid';
 
 // Need a 2-layer proxyquire now because of the base class dependencies.
-const Base = proxyquire('../build/base', {
+const Base = proxyquire('../src/base', {
   'uuid/v4': () => uuid,
 });
 
-const mainProcessDefault = proxyquire('../build/mainProcess', {
+const mainProcessDefault = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   './base': Base,
 });
@@ -106,7 +108,7 @@ describe('mainProcess', () => {
 
     it('lets a listener reject with a custom error', (done) => {
       mainProcess.on(route, () => {
-        const custom = new Error('message');
+        const custom: Error & { [key: string]: any } = new Error('message');
         custom.obj = { foo: 'bar' };
         custom.array = ['one', 'two'];
         custom.func = () => 'yay!';
@@ -240,7 +242,8 @@ describe('mainProcess', () => {
 
       it('fails if it times out', () => {
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
 
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
@@ -255,7 +258,8 @@ describe('mainProcess', () => {
           }, 6000);
         });
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
