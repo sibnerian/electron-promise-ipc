@@ -1,5 +1,5 @@
 import uuid from 'uuid/v4';
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import Map from 'es6-map';
 import { IpcMain, IpcRenderer, WebContents, IpcMessageEvent } from 'electron';
 
