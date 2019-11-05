@@ -3,8 +3,12 @@
     "mocha": true
   },
   "rules": {
-    "import/no-extraneous-dependencies": [2, {
-      "devDependencies": true
-    }]
+    "@typescript-eslint/no-explicit-any": 1,
+    "import/no-extraneous-dependencies": [
+      2,
+      {
+        "devDependencies": true
+      }
+    ]
   }
 }

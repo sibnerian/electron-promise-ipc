@@ -1,29 +1,33 @@
-import proxyquire from 'proxyquire';
 import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
 import { fail } from 'assert';
+import electronIpcMock from 'electron-ipc-mock';
+import { IpcMessageEvent, WebContents } from 'electron';
+import { MainProcessType } from '../src/index';
 
-const { ipcRenderer, ipcMain } = require('electron-ipc-mock')();
+const proxyquire: any = require('proxyquire'); // eslint-disable-line
+
+const { ipcRenderer, ipcMain } = electronIpcMock();
 
 chai.use(chaiAsPromised);
 const uuid = 'totally_random_uuid';
 
 // Need a 2-layer proxyquire now because of the base class dependencies.
-const Base = proxyquire('../build/base', {
+const Base = proxyquire('../src/base', {
   'uuid/v4': () => uuid,
 });
 
-const mainProcessDefault = proxyquire('../build/mainProcess', {
+const mainProcessDefault: MainProcessType = proxyquire('../src/mainProcess', {
   electron: { ipcMain },
   './base': Base,
 });
 
 const { PromiseIpc } = mainProcessDefault;
 
-const generateRoute = (function generateRoute() {
+const generateRoute: { (): string } = (function generateRoute() {
   let i = 1;
-  return () => i++; // eslint-disable-line no-plusplus
+  return () => `${i++}`; // eslint-disable-line no-plusplus
 })();
 
 describe('mainProcess', () => {
@@ -32,8 +36,8 @@ describe('mainProcess', () => {
   });
 
   describe('on', () => {
-    let mainProcess;
-    let route;
+    let mainProcess: MainProcessType;
+    let route: string;
 
     beforeEach(() => {
       mainProcess = new PromiseIpc();
@@ -47,7 +51,7 @@ describe('mainProcess', () => {
 
     it('when listener returns resolved promise, sends success + value to the renderer', (done) => {
       mainProcess.on(route, () => Promise.resolve('foober'));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -57,7 +61,7 @@ describe('mainProcess', () => {
     it('overrides the previous listener when one is added on the same route', (done) => {
       mainProcess.on(route, () => Promise.resolve('foober'));
       mainProcess.on(route, () => Promise.resolve('goober'));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'goober']);
         done();
       });
@@ -66,7 +70,7 @@ describe('mainProcess', () => {
 
     it('when listener synchronously returns, sends success + value to the renderer', (done) => {
       mainProcess.on(route, () => 'foober');
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -75,7 +79,7 @@ describe('mainProcess', () => {
 
     it('when listener returns rejected promise, sends failure + error to the renderer', (done) => {
       mainProcess.on(route, () => Promise.reject(new Error('foober')));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: Error) => {
         expect(status).to.eql('failure');
         expect(result.name).to.eql('Error');
         expect(result.message).to.eql('foober');
@@ -87,7 +91,7 @@ describe('mainProcess', () => {
     it('lets listener reject with a simple string', (done) => {
       // eslint-disable-next-line prefer-promise-reject-errors
       mainProcess.on(route, () => Promise.reject('goober'));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['failure', 'goober']);
         done();
       });
@@ -97,7 +101,7 @@ describe('mainProcess', () => {
     it('lets a listener reject with a function', (done) => {
       // eslint-disable-next-line prefer-promise-reject-errors
       mainProcess.on(route, () => Promise.reject(() => 'yay!'));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['failure', '[Function: anonymous]']);
         done();
       });
@@ -106,22 +110,25 @@ describe('mainProcess', () => {
 
     it('lets a listener reject with a custom error', (done) => {
       mainProcess.on(route, () => {
-        const custom = new Error('message');
+        const custom: Error & { [key: string]: any } = new Error('message');
         custom.obj = { foo: 'bar' };
         custom.array = ['one', 'two'];
         custom.func = () => 'yay!';
         custom.self = custom;
         return Promise.reject(custom);
       });
-      ipcRenderer.once('replyChannel', (event, status, result) => {
-        expect(status).to.eql('failure');
-        expect(result.message).to.eql('message');
-        expect(result.obj).to.eql({ foo: 'bar' });
-        expect(result.array).to.eql(['one', 'two']);
-        expect(result.func).to.eql(undefined);
-        expect(result.self).to.eql('[Circular]');
-        done();
-      });
+      ipcRenderer.once(
+        'replyChannel',
+        (event: IpcMessageEvent, status: string, result: Error & { [key: string]: any }) => {
+          expect(status).to.eql('failure');
+          expect(result.message).to.eql('message');
+          expect(result.obj).to.eql({ foo: 'bar' });
+          expect(result.array).to.eql(['one', 'two']);
+          expect(result.func).to.eql(undefined);
+          expect(result.self).to.eql('[Circular]');
+          done();
+        },
+      );
       ipcRenderer.send(route, 'replyChannel', 'dataArg1');
     });
 
@@ -129,7 +136,7 @@ describe('mainProcess', () => {
       mainProcess.on(route, () => {
         throw new Error('oh no');
       });
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: Error) => {
         expect(status).to.eql('failure');
         expect(result.name).to.eql('Error');
         expect(result.message).to.eql('oh no');
@@ -141,7 +148,7 @@ describe('mainProcess', () => {
     it('passes the received data args to the listener', (done) => {
       //  Return all _data_ args, concatenated, but leave off the event arg.
       mainProcess.on(route, (...args) => args.slice(0, -1).join(','));
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foo,bar,baz']);
         done();
       });
@@ -149,12 +156,12 @@ describe('mainProcess', () => {
     });
 
     it('passes the event to the listener after data args', (done) => {
-      mainProcess.on(route, (foo, bar, baz, event) => {
+      mainProcess.on(route, (foo: string, bar: string, baz: string, event: IpcMessageEvent) => {
         expect([foo, bar, baz]).to.eql(['foo', 'bar', 'baz']);
         expect(event.sender.send).to.be.instanceOf(Function);
         return null;
       });
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         // If there was an error, then that error will be stored in result.
         done(result);
       });
@@ -165,7 +172,7 @@ describe('mainProcess', () => {
       const cb = () => Promise.resolve('foober');
       mainProcess.on(route, cb);
       mainProcess.on(route, cb);
-      ipcRenderer.once('replyChannel', (event, status, result) => {
+      ipcRenderer.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -174,10 +181,10 @@ describe('mainProcess', () => {
   });
 
   describe('send', () => {
-    let mockWebContents;
+    let mockWebContents: WebContents;
     const mainProcess = mainProcessDefault;
     before((done) => {
-      ipcMain.once('saveMockWebContentsSend', (event) => {
+      ipcMain.once('saveMockWebContentsSend', (event: IpcMessageEvent) => {
         mockWebContents = event.sender;
         done();
       });
@@ -186,7 +193,7 @@ describe('mainProcess', () => {
 
     it('resolves to sent data on success', () => {
       const replyChannel = `route#${uuid}`;
-      ipcRenderer.once('route', (event) => {
+      ipcRenderer.once('route', (event: IpcMessageEvent) => {
         event.sender.send(replyChannel, 'success', 'result');
       });
       const promise = mainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
@@ -195,8 +202,8 @@ describe('mainProcess', () => {
 
     it('sends the reply channel any additional arguments', () => {
       const replyChannel = `route#${uuid}`;
-      let argumentsAfterEvent;
-      ipcRenderer.once('route', (event, ...rest) => {
+      let argumentsAfterEvent: unknown[];
+      ipcRenderer.once('route', (event: IpcMessageEvent, ...rest) => {
         argumentsAfterEvent = rest;
         event.sender.send(replyChannel, 'success', 'result');
       });
@@ -217,7 +224,7 @@ describe('mainProcess', () => {
 
     it('rejects if the IPC passes an unrecognized lifecycle event', () => {
       const replyChannel = `route#${uuid}`;
-      ipcRenderer.once('route', (event) => {
+      ipcRenderer.once('route', (event: IpcMessageEvent) => {
         event.sender.send(replyChannel, 'unrecognized', 'an error message');
       });
       const promise = mainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
@@ -240,7 +247,8 @@ describe('mainProcess', () => {
 
       it('fails if it times out', () => {
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
 
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
@@ -255,7 +263,8 @@ describe('mainProcess', () => {
           }, 6000);
         });
         const timeoutMainProcess = new PromiseIpc({ maxTimeoutMs: 5000 });
-        const makePromise = () => timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
+        const makePromise = () =>
+          timeoutMainProcess.send('route', mockWebContents, 'dataArg1', 'dataArg2');
         const p = expect(makePromise()).to.be.rejectedWith(Error, 'route timed out.');
         clock.tick(5001);
         clock.tick(1000);
@@ -265,8 +274,8 @@ describe('mainProcess', () => {
   });
 
   describe('off', () => {
-    let mainProcess;
-    let route;
+    let mainProcess: MainProcessType;
+    let route: string;
 
     beforeEach(() => {
       mainProcess = new PromiseIpc();
