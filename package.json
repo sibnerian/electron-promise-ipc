@@ -7,9 +7,9 @@
     "coverage": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "cross-env NODE_ENV=test npm run coverage",
-    "lint": "eslint .",
-    "build": "mkdirp build && babel src --out-dir build --source-maps",
-    "prepublish": "npm run build",
+    "lint": "eslint . --ext=.ts,.js",
+    "build": "mkdirp build && tsc && babel src --out-dir build --source-maps",
+    "prepublishOnly": "npm run build",
     "clean": "rimraf build"
   },
   "main": "build/index.js",
@@ -23,17 +23,27 @@
     "electron": "^1.4.15"
   },
   "dependencies": {
-    "es6-map": "^0.1.5",
     "is-electron-renderer": "^2.0.1",
-    "serialize-error": "^3.0.0",
+    "serialize-error": "^5.0.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
+    "@babel/cli": "^7.6.4",
     "@babel/core": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
     "@babel/polyfill": "^7.2.5",
     "@babel/preset-env": "^7.3.4",
+    "@babel/preset-typescript": "^7.6.0",
     "@babel/register": "^7.0.0",
+    "@types/chai": "^4.2.4",
+    "@types/chai-as-promised": "^7.1.2",
+    "@types/lolex": "^3.1.1",
+    "@types/mocha": "^5.2.7",
+    "@types/serialize-error": "^4.0.1",
+    "@types/uuid": "^3.4.6",
+    "@typescript-eslint/eslint-plugin": "^2.6.0",
+    "@typescript-eslint/parser": "^2.6.0",
     "babel-plugin-istanbul": "^5.1.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
@@ -43,28 +53,37 @@
     "electron-ipc-mock": "^0.0.3",
     "eslint": "^5.14.1",
     "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jsx-a11y": "^6.2.1",
+    "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-react": "^7.12.4",
-    "lolex": "^1.5.2",
+    "lolex": "^1.6.0",
     "mkdirp": "^0.5.1",
     "mocha": "^5.2.0",
-    "nyc": "^13.3.0",
+    "nyc": "^14.1.1",
+    "prettier": "^1.18.2",
     "proxyquire": "2.1.0",
     "rimraf": "^2.6.3",
     "sinon": "^7.2.5",
-    "sinon-chai": "^3.3.0"
+    "sinon-chai": "^3.3.0",
+    "source-map-support": "^0.5.16",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.4"
   },
   "nyc": {
-    "require": [
-      "@babel/register"
+    "include": [
+      "src/**/*.ts"
     ],
-    "sourceMap": false,
-    "instrument": false,
-    "exclude": [
-      "test",
-      "build"
-    ]
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "sourceMap": true,
+    "instrument": true
   },
   "directories": {
     "test": "test"

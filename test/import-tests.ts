@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 // we are main process by default
-import defaultExport, { PromiseIpc, PromiseIpcMain } from '../build/index';
+import defaultExport, { MainProcessType } from '../src/index';
+
+const { PromiseIpc, PromiseIpcMain } = defaultExport as MainProcessType;
 
 describe('importing the built module', () => {
   it('exports a PromiseIpcMain function and PromiseIpc as an alias', () => {

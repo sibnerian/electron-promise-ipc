@@ -1,6 +1,6 @@
-import { expect } from 'chai';
+const { expect } = require('chai'); // eslint-disable-line
 // we are main process by default
-const defaultExport = require('../build/index');
+const defaultExport = require('../build/index'); // eslint-disable-line
 
 const { PromiseIpc, PromiseIpcMain } = defaultExport;
 
