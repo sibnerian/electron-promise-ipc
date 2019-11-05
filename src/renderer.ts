@@ -22,5 +22,5 @@ const rendererExport: RendererProcessType = new PromiseIpcRenderer();
 rendererExport.PromiseIpc = PromiseIpcRenderer;
 rendererExport.PromiseIpcRenderer = PromiseIpcRenderer;
 
-export default rendererExport;
 module.exports = rendererExport;
+export default rendererExport;

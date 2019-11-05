@@ -23,5 +23,5 @@ const mainExport: MainProcessType = new PromiseIpcMain();
 mainExport.PromiseIpc = PromiseIpcMain;
 mainExport.PromiseIpcMain = PromiseIpcMain;
 
-export default mainExport;
 module.exports = mainExport;
+export default mainExport;

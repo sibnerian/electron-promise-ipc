@@ -2,6 +2,21 @@ import uuid from 'uuid/v4';
 import { serializeError } from 'serialize-error';
 import { IpcMain, IpcRenderer, WebContents, IpcMessageEvent } from 'electron';
 
+// serializeError requires an Object.entries polyfill on node <= 6.
+// Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries#Polyfill
+/* eslint-disable */
+if (!Object.entries) {
+  Object.entries = function(obj) {
+    var ownProps = Object.keys(obj),
+      i = ownProps.length,
+      resArray = new Array(i); // preallocate the Array
+    while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+
+    return resArray;
+  };
+}
+/* eslint-enable */
+
 /**
  * For backwards compatibility, event is the (optional) LAST argument to a listener function.
  * This leads to the following verbose overload type for a listener function.
