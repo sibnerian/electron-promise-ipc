@@ -20,7 +20,7 @@
   "author": "Ian Sibner <sibnerian@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "electron": "^1.4.15"
+    "electron": ">= 1.4.15"
   },
   "dependencies": {
     "is-electron-renderer": "^2.0.1",
