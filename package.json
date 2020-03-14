@@ -3,7 +3,7 @@
   "version": "2.0.1",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
-    "pretest": "npm run --silent lint && npm run build",
+    "pretest": "if [ 'v6' = $(node --version | cut -c -2) ] ; then echo 'Skipping lint for node v6' ; else npm run --silent lint; fi && npm run build",
     "coverage": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "test": "cross-env NODE_ENV=test npm run coverage",
