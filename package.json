@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "is-electron-renderer": "^2.0.1",
+    "object.entries": "^1.1.1",
     "serialize-error": "^5.0.0",
     "uuid": "^3.0.1"
   },
