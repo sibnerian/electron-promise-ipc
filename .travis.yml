@@ -1,7 +1,9 @@
 language: node_js
-cache: yarn
+cache: npm
+before_script: 'npm run before-script'
 node_js:
   - 6
+    before_script: 'echo "Skip before script"'
   - 8
   - 10
   - 12
