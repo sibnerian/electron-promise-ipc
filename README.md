@@ -55,6 +55,17 @@ Any arguments to `send()` will be passed directly to the event listener from `on
 
 Note that because this is IPC, only JSON-serializable values can be passed as arguments or data. Classes and functions will generally not survive a round of serialization/deserialization.
 
+## Preload
+
+As of Electron 5.0, `nodeIntegration` is _disabled by default._ This means that you cannot import `promiseIpc` directly. Instead, you will need to use a [preload](https://www.electronjs.org/docs/api/browser-window) script when opening a `BrowserWindow`. Preload scripts can access builtins such as `require` even if `nodeIntegration` is disabled.
+
+For convenience, this library provides a preload script which you can require that sets `window.promiseIpc`.
+
+```js
+// preload.js
+require('electron-promise-ipc/preload');
+```
+
 ## Advanced usage
 
 #### Timeouts
