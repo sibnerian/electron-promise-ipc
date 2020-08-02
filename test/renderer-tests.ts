@@ -3,7 +3,7 @@ import chaiAsPromised from 'chai-as-promised';
 import lolex from 'lolex';
 import { fail } from 'assert';
 import electronIpcMock from 'electron-ipc-mock';
-import { IpcMessageEvent, WebContents } from 'electron';
+import { IpcMainEvent, IpcRendererEvent, WebContents } from 'electron';
 import { RendererProcessType } from '../src/index';
 
 const proxyquire: any = require('proxyquire'); // eslint-disable-line
@@ -38,7 +38,7 @@ describe('renderer', () => {
   describe('send', () => {
     it('resolves to sent data on success', () => {
       const replyChannel = `route#${uuid}`;
-      ipcMain.once('route', (event: IpcMessageEvent) => {
+      ipcMain.once('route', (event: IpcMainEvent) => {
         event.sender.send(replyChannel, 'success', 'result');
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
@@ -48,7 +48,7 @@ describe('renderer', () => {
     it('sends the reply channel and any additional arguments', () => {
       const replyChannel = `route#${uuid}`;
       let argumentsAfterEvent: string[];
-      ipcMain.once('route', (event: IpcMessageEvent, ...rest: string[]) => {
+      ipcMain.once('route', (event: IpcMainEvent, ...rest: string[]) => {
         argumentsAfterEvent = rest;
         event.sender.send(replyChannel, 'success', 'result');
       });
@@ -60,7 +60,7 @@ describe('renderer', () => {
 
     it('rejects with the IPC-passed message on failure', () => {
       const replyChannel = `route#${uuid}`;
-      ipcMain.once('route', (event: IpcMessageEvent) => {
+      ipcMain.once('route', (event: IpcMainEvent) => {
         event.sender.send(replyChannel, 'failure', new Error('an error message'));
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
@@ -69,7 +69,7 @@ describe('renderer', () => {
 
     it('rejects if the IPC passes an unrecognized lifecycle event', () => {
       const replyChannel = `route#${uuid}`;
-      ipcMain.once('route', (event: IpcMessageEvent) => {
+      ipcMain.once('route', (event: IpcMainEvent) => {
         event.sender.send(replyChannel, 'unrecognized', 'an error message');
       });
       const promise = renderer.send('route', 'dataArg1', 'dataArg2');
@@ -99,7 +99,7 @@ describe('renderer', () => {
 
       it('swallows a subsequent resolve if it timed out', () => {
         const replyChannel = `route#${uuid}`;
-        ipcMain.once('route', (event: IpcMessageEvent) => {
+        ipcMain.once('route', (event: IpcMainEvent) => {
           setTimeout(() => {
             event.sender.send(replyChannel, 'success', 'a message');
           }, 6000);
@@ -118,7 +118,7 @@ describe('renderer', () => {
     let route: string;
     let mockWebContents: WebContents;
     before((done) => {
-      ipcMain.once('saveMockWebContentsSend', (event: IpcMessageEvent) => {
+      ipcMain.once('saveMockWebContentsSend', (event: IpcMainEvent) => {
         mockWebContents = event.sender;
         done();
       });
@@ -136,7 +136,7 @@ describe('renderer', () => {
 
     it('when listener returns resolved promise, sends success + value to the main process', (done) => {
       renderer.on(route, () => Promise.resolve('foober'));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -146,7 +146,7 @@ describe('renderer', () => {
     it('overrides the previous listener when one is added on the same route', (done) => {
       renderer.on(route, () => Promise.resolve('foober'));
       renderer.on(route, () => Promise.resolve('goober'));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'goober']);
         done();
       });
@@ -155,7 +155,7 @@ describe('renderer', () => {
 
     it('when listener synchronously returns, sends success + value to the main process', (done) => {
       renderer.on(route, () => Promise.resolve('foober'));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -164,7 +164,7 @@ describe('renderer', () => {
 
     it('when listener returns rejected promise, sends failure + error to the main process', (done) => {
       renderer.on(route, () => Promise.reject(new Error('foober')));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: Error) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: Error) => {
         expect(status).to.eql('failure');
         expect(result.name).to.eql('Error');
         expect(result.message).to.eql('foober');
@@ -176,7 +176,7 @@ describe('renderer', () => {
     it('lets a listener reject with a simple string', (done) => {
       // eslint-disable-next-line prefer-promise-reject-errors
       renderer.on(route, () => Promise.reject('goober'));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: Error) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: Error) => {
         expect([status, result]).to.eql(['failure', 'goober']);
         done();
       });
@@ -186,7 +186,7 @@ describe('renderer', () => {
     it('lets a listener reject with a function', (done) => {
       // eslint-disable-next-line prefer-promise-reject-errors
       renderer.on(route, () => Promise.reject(() => 'yay!'));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['failure', '[Function: anonymous]']);
         done();
       });
@@ -204,7 +204,7 @@ describe('renderer', () => {
       });
       ipcMain.once(
         'replyChannel',
-        (event: IpcMessageEvent, status: string, result: Error & { [key: string]: any }) => {
+        (event: IpcMainEvent, status: string, result: Error & { [key: string]: any }) => {
           expect(status).to.eql('failure');
           expect(result.message).to.eql('message');
           expect(result.obj).to.eql({ foo: 'bar' });
@@ -221,7 +221,7 @@ describe('renderer', () => {
       renderer.on(route, () => {
         throw new Error('oh no');
       });
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: Error) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: Error) => {
         expect(status).to.eql('failure');
         expect(result.name).to.eql('Error');
         expect(result.message).to.eql('oh no');
@@ -233,7 +233,7 @@ describe('renderer', () => {
     it('passes the received data args to the listener', (done) => {
       //  Return all _data_ args, concatenated, but leave off the event arg.
       renderer.on(route, (...args) => args.slice(0, -1).join(','));
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foo,bar,baz']);
         done();
       });
@@ -241,12 +241,12 @@ describe('renderer', () => {
     });
 
     it('passes the event to the listener after data args', (done) => {
-      renderer.on(route, (foo: string, bar: string, baz: string, event: IpcMessageEvent) => {
+      renderer.on(route, (foo: string, bar: string, baz: string, event: IpcRendererEvent) => {
         expect([foo, bar, baz]).to.eql(['foo', 'bar', 'baz']);
         expect(event.sender.send).to.be.instanceOf(Function);
         return null;
       });
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         // If there was an error, then that error will be stored in result.
         done(result);
       });
@@ -257,7 +257,7 @@ describe('renderer', () => {
       const cb = () => Promise.resolve('foober');
       renderer.on(route, cb);
       renderer.on(route, cb);
-      ipcMain.once('replyChannel', (event: IpcMessageEvent, status: string, result: string) => {
+      ipcMain.once('replyChannel', (event: IpcMainEvent, status: string, result: string) => {
         expect([status, result]).to.eql(['success', 'foober']);
         done();
       });
@@ -269,7 +269,7 @@ describe('renderer', () => {
     let route: string;
     let mockWebContents: WebContents;
     before((done) => {
-      ipcMain.once('saveMockWebContentsSend', (event: IpcMessageEvent) => {
+      ipcMain.once('saveMockWebContentsSend', (event: IpcMainEvent) => {
         mockWebContents = event.sender;
         done();
       });

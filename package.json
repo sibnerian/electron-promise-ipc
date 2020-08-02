@@ -20,7 +20,7 @@
   "author": "Ian Sibner <sibnerian@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "electron": ">= 1.4.15"
+    "electron": ">= 9.1.2"
   },
   "dependencies": {
     "is-electron-renderer": "^2.0.1",
@@ -50,7 +50,7 @@
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.0.3",
     "cross-env": "^5.2.0",
-    "electron": "^4.0.6",
+    "electron": "^9.1.2",
     "electron-ipc-mock": "^0.0.3",
     "eslint": "^5.14.1",
     "eslint-config-airbnb": "^17.1.0",

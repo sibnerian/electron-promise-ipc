@@ -1,24 +1,26 @@
 import uuid from 'uuid/v4';
 import { serializeError } from 'serialize-error';
-import { IpcMain, IpcRenderer, WebContents, IpcMessageEvent } from 'electron';
+import type { IpcMain, IpcRenderer, WebContents, IpcMainEvent, IpcRendererEvent } from 'electron';
 import 'object.entries/auto'; // Shim Object.entries. Required to use serializeError.
+
+type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
 /**
  * For backwards compatibility, event is the (optional) LAST argument to a listener function.
  * This leads to the following verbose overload type for a listener function.
  */
 export type Listener =
-  | { (event?: IpcMessageEvent): void }
-  | { (arg1?: unknown, event?: IpcMessageEvent): void }
-  | { (arg1?: unknown, arg2?: unknown, event?: IpcMessageEvent): void }
-  | { (arg1?: unknown, arg2?: unknown, arg3?: unknown, event?: IpcMessageEvent): void }
+  | { (event?: IpcEvent): void }
+  | { (arg1?: unknown, event?: IpcEvent): void }
+  | { (arg1?: unknown, arg2?: unknown, event?: IpcEvent): void }
+  | { (arg1?: unknown, arg2?: unknown, arg3?: unknown, event?: IpcEvent): void }
   | {
       (
         arg1?: unknown,
         arg2?: unknown,
         arg3?: unknown,
         arg4?: unknown,
-        event?: IpcMessageEvent,
+        event?: IpcEvent,
       ): void;
     }
   | {
@@ -28,13 +30,13 @@ export type Listener =
         arg3?: unknown,
         arg4?: unknown,
         arg5?: unknown,
-        event?: IpcMessageEvent,
+        event?: IpcEvent,
       ): void;
     };
 export type Options = { maxTimeoutMs?: number };
 // There's an `any` here it's the only way that the typescript compiler allows you to call listener(...dataArgs, event).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type WrappedListener = { (event: IpcMessageEvent, replyChannel: string, ...dataArgs: any[]): void };
+type WrappedListener = { (event: IpcEvent, replyChannel: string, ...dataArgs: any[]): void };
 
 export default class PromiseIpcBase {
   private eventEmitter: IpcMain | IpcRenderer;
@@ -67,7 +69,7 @@ export default class PromiseIpcBase {
 
       this.eventEmitter.once(
         replyChannel,
-        (event: IpcMessageEvent, status: string, returnData: unknown) => {
+        (event: IpcEvent, status: string, returnData: unknown) => {
           clearTimeout(timeout);
           if (didTimeOut) {
             return null;
