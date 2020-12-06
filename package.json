@@ -1,6 +1,6 @@
 {
   "name": "electron-promise-ipc",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Run IPC calls with a promise API.",
   "scripts": {
     "pretest": "if [ 'v6' = $(node --version | cut -c -2) ] ; then echo 'Skipping lint for node v6' ; else npm run --silent lint; fi && npm run build",
