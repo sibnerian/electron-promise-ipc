@@ -50,7 +50,7 @@
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.1.0",
     "cross-env": "^5.2.0",
-    "electron": "^11.0.3",
+    "electron": "^13.6.6",
     "electron-ipc-mock": "^0.0.3",
     "eslint": "^5.14.1",
     "eslint-config-airbnb": "^17.1.0",
