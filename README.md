@@ -10,6 +10,49 @@
 npm install --save electron-promise-ipc
 ```
 
+## How to import library in renderer process
+
+### For electron < 5.0
+
+Just import or require `electron-promise-ipc` like you would do with any other library.
+
+### For electron between 5.0 and 12.0
+
+As of Electron 5.0, `nodeIntegration` is _disabled by default._ This means that you cannot import `promiseIpc` directly from the renderer process. Instead, you will need to use a [preload](https://www.electronjs.org/docs/api/browser-window) script when opening a `BrowserWindow`. Preload scripts can access builtins such as `require` even if `nodeIntegration` is disabled.
+
+For convenience, this library provides a preload script which you can require that sets `window.promiseIpc`.
+
+```js
+//in  preload.js
+require('electron-promise-ipc/preload');
+```
+
+```js
+// in renderer process, without importing
+window.promiseIpc.send("event", variable);
+```
+
+### For electron >= 12.0
+
+From Electron 12.0, `contextIsolation` is _enabled by default._ This means that you cannot import `promiseIpc` directly from the renderer process, and you can't modify `window` directly from the `preload.js` file directly like you did with electron < 12. You need to use contextBridge inside a [preload](https://www.electronjs.org/docs/api/browser-window) script like this:
+
+```js
+//in preload.js
+const promiseIpc = require("electron-promise-ipc")
+
+contextBridge.exposeInMainWorld("promiseIpc", {
+  send: (event, ...args) => promiseIpc.send(event, ...args),
+  on: (event, listener) => promiseIpc.on(event, listener),
+  off: (event, listener) => promiseIpc.off(event, listener),
+  removeAllListeners: (event) => promiseIpc.removeAllListeners(event),
+})
+```
+
+```js
+// in renderer process, without importing
+window.promiseIpc.send("event", variable);
+```
+
 ## Usage
 
 The most common use case: from the renderer, get data from the main process as a promise.
@@ -23,10 +66,9 @@ promiseIpc.on('writeSettingsFile', (newSettings, event) => {
   return fsp.writeFile('~/.settings', newSettings);
 });
 
-// in renderer
-import promiseIpc from 'electron-promise-ipc';
-
-promiseIpc
+// in renderer process
+// with nodeIntegration:false and contextIsolation:true, you need to use window.promiseIpc
+window.promiseIpc
   .send('writeSettingsFile', '{ "name": "Jeff" }')
   .then(() => console.log('You wrote the settings!'))
   .catch((e) => console.error(e));
@@ -43,10 +85,9 @@ promiseIpc
   .then((rendererData) => console.log(rendererData))
   .catch((e) => console.error(e));
 
-// in renderer
-import promiseIpc from 'electron-promise-ipc';
-
-promiseIpc.on('getRendererData', (event) => {
+// in renderer process
+// with nodeIntegration:false and contextIsolation:true, you need to use window.promiseIpc
+window.promiseIpc.on('getRendererData', (event) => {
   return getSomeSuperAwesomeRendererData();
 });
 ```
@@ -55,18 +96,9 @@ Any arguments to `send()` will be passed directly to the event listener from `on
 
 Note that because this is IPC, only JSON-serializable values can be passed as arguments or data. Classes and functions will generally not survive a round of serialization/deserialization.
 
-## Preload
-
-As of Electron 5.0, `nodeIntegration` is _disabled by default._ This means that you cannot import `promiseIpc` directly. Instead, you will need to use a [preload](https://www.electronjs.org/docs/api/browser-window) script when opening a `BrowserWindow`. Preload scripts can access builtins such as `require` even if `nodeIntegration` is disabled.
-
-For convenience, this library provides a preload script which you can require that sets `window.promiseIpc`.
-
-```js
-// preload.js
-require('electron-promise-ipc/preload');
-```
-
 ## Advanced usage
+
+Remember to edit below code to use `window.promiseIpc` if you're using electron >= 5.
 
 #### Timeouts
 
