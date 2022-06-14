@@ -10,28 +10,28 @@ type IpcEvent = IpcRendererEvent & IpcMainEvent;
  * This leads to the following verbose overload type for a listener function.
  */
 export type Listener =
-  | { (event?: IpcEvent): void }
-  | { (arg1?: unknown, event?: IpcEvent): void }
-  | { (arg1?: unknown, arg2?: unknown, event?: IpcEvent): void }
-  | { (arg1?: unknown, arg2?: unknown, arg3?: unknown, event?: IpcEvent): void }
+  | { (event?: IpcEvent): Promise<any> | void }
+  | { (arg1: any, event?: IpcEvent): Promise<any> | void }
+  | { (arg1: any, arg2: any, event?: IpcEvent): Promise<any> | void }
+  | { (arg1: any, arg2: any, arg3: any, event?: IpcEvent): Promise<any> | void }
   | {
       (
-        arg1?: unknown,
-        arg2?: unknown,
-        arg3?: unknown,
-        arg4?: unknown,
+        arg1: any,
+        arg2: any,
+        arg3: any,
+        arg4: any,
         event?: IpcEvent,
-      ): void;
+      ): Promise<any> | void;
     }
   | {
       (
-        arg1?: unknown,
-        arg2?: unknown,
-        arg3?: unknown,
-        arg4?: unknown,
-        arg5?: unknown,
+        arg1: any,
+        arg2: any,
+        arg3: any,
+        arg4: any,
+        arg5: any,
         event?: IpcEvent,
-      ): void;
+      ): Promise<any> | void;
     };
 export type Options = { maxTimeoutMs?: number };
 // There's an `any` here it's the only way that the typescript compiler allows you to call listener(...dataArgs, event).
